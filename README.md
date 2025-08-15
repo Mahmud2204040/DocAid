@@ -1,1 +1,2 @@
 "# DocAid" 
+"# DocAid"  git init
