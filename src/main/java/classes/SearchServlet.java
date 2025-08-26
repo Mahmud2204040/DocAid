@@ -32,7 +32,7 @@ public class SearchServlet extends HttpServlet {
             SearchPageDetails.SearchResult result = SearchPageDetails.searchDoctors(con, query, null, null, null, null, null, page, 10);
             request.setAttribute("searchResult", result);
             request.setAttribute("searchQuery", query);
-                        request.getRequestDispatcher("/PATIENT/search_results.jsp").forward(request, response);
+                        request.getRequestDispatcher("/PATIENT/search.jsp").forward(request, response);
         } catch (SQLException e) {
             throw new ServletException("Database error during doctor search", e);
         }

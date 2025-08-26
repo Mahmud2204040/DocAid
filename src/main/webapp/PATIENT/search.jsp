@@ -1,5 +1,6 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -9,6 +10,8 @@
     <title>Search Doctors - DocAid</title>
     <!-- Local CSS -->
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/search_page.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/doctor_card.css">
     
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -91,7 +94,7 @@
             position: relative;
             height: 70vh;
             min-height: 500px;
-            background: url('../images/search_hero_section.png') center/cover no-repeat !important;
+            background: url('${pageContext.request.contextPath}/images/search_hero_section.png') center/cover no-repeat !important;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -603,7 +606,7 @@
                         <div class="search-input-group">
                             <input type="text" name="q" class="search-input"
                                    placeholder="Search for doctors, specialties, or location..."
-                                   aria-label="Search doctors and location" required>
+                                   aria-label="Search doctors and location" required value="<c:out value='${param.q}'/>">
                             <button class="search-btn" type="submit" aria-label="Search">
                                 <i class="bi bi-search" style="margin-right: 0.5rem;"></i> Find Care
                             </button>
@@ -612,10 +615,55 @@
                 </div>
             </div>
         </section>
+
+        <c:if test="${not empty searchResult}">
+            <div class="container mt-5">
+                <h2>Search Results for "<c:out value='${param.q}'/>"</h2>
+                <p class="text-muted">Found ${searchResult.totalResults} doctors.</p>
+        
+                <div class="row justify-content-center">
+                    <div class="col-md-8">
+                        <c:if test="${empty searchResult.doctors}">
+                            <div class="alert alert-info" role="alert">
+                                No doctors found matching your search criteria.
+                            </div>
+                        </c:if>
+                        <c:forEach var="doctor" items="${searchResult.doctors}">
+                            <div class="mb-4">
+                                <%@ include file="_doctor_card.jsp" %>
+                            </div>
+                        </c:forEach>
+        
+                        <c:if test="${searchResult.totalPages > 1}">
+                            <nav aria-label="Page navigation">
+                                <ul class="pagination justify-content-center">
+                                    <li class="page-item ${searchResult.currentPage == 1 ? 'disabled' : ''}">
+                                        <a class="page-link" href="?q=${param.q}&page=${searchResult.currentPage - 1}" aria-label="Previous">
+                                            <span aria-hidden="true">&laquo;</span>
+                                        </a>
+                                    </li>
+                                    <c:forEach begin="1" end="${searchResult.totalPages}" var="i">
+                                        <li class="page-item ${searchResult.currentPage == i ? 'active' : ''}">
+                                            <a class="page-link" href="?q=${param.q}&page=${i}">${i}</a>
+                                        </li>
+                                    </c:forEach>
+                                    <li class="page-item ${searchResult.currentPage == searchResult.totalPages ? 'disabled' : ''}">
+                                        <a class="page-link" href="?q=${param.q}&page=${searchResult.currentPage + 1}" aria-label="Next">
+                                            <span aria-hidden="true">&raquo;</span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </nav>
+                        </c:if>
+                    </div>
+                </div>
+            </div>
+        </c:if>
     </main>
 
     <!-- Local JS -->
     <script src="${pageContext.request.contextPath}/assets/js/jquery.min.js"></script>
     <script src="${pageContext.request.contextPath}/assets/js/bootstrap.bundle.min.js"></script>
+    <%@ include file="_booking_modal.jsp" %>
 </body>
 </html>
