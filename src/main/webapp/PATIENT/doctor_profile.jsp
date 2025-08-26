@@ -17,8 +17,8 @@
             padding: 3rem 0;
         }
         .profile-avatar {
-            width: 150px;
-            height: 150px;
+            width: 120px;
+            height: 120px;
             border-radius: 50%;
             border: 4px solid white;
             box-shadow: 0 4px 15px rgba(0,0,0,0.2);
@@ -35,7 +35,16 @@
         <div class="container">
             <div class="row align-items-center">
                 <div class="col-md-3 text-center">
-                    <img src="${pageContext.request.contextPath}/images/${not empty doctor.profileImage ? doctor.profileImage : 'default-doctor.jpg'}" class="profile-avatar" alt="Dr. <c:out value="${doctor.displayName}"/>">
+                    <c:set var="imagePath" value="${pageContext.request.contextPath}/images/default-doctor.jpg" />
+                    <c:if test="${doctor.gender == 'Male'}">
+                        <c:set var="imagePath" value="${pageContext.request.contextPath}/images/male_doctor.png" />
+                    </c:if>
+                    <c:if test="${doctor.gender == 'Female'}">
+                        <c:set var="imagePath" value="${pageContext.request.contextPath}/images/female_doctor.png" />
+                    </c:if>
+                    <img src="${imagePath}"
+                         alt="Dr. <c:out value='${doctor.displayName}'/>"
+                         class="profile-avatar">
                 </div>
                 <div class="col-md-9">
                     <h1>Dr. <c:out value="${doctor.displayName}"/></h1>
@@ -174,6 +183,7 @@
         </div>
     </div>
 
+    
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

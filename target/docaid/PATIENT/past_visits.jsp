@@ -549,7 +549,7 @@
 </head>
 
 <body>
-    <%@ include file="header_patient.jsp" %>
+    <jsp:include page="header_patient.jsp" />
 
     <!-- Page Header -->
     <div class="page-header">
@@ -685,6 +685,20 @@
                                                 </div>
                                             </div>
                                         </div>
+                                        <c:if test="${visit.status eq 'Completed'}">
+                                            <div class="d-grid mt-3">
+                                                <c:if test="${visit.hasReviewed}">
+                                                    <button class="btn btn-secondary btn-sm" disabled>
+                                                        <i class="fas fa-check-circle me-1"></i> You already reviewed
+                                                    </button>
+                                                </c:if>
+                                                <c:if test="${not visit.hasReviewed}">
+                                                    <a href="${pageContext.request.contextPath}/PATIENT/give_review.jsp?doctorId=${visit.doctorId}&doctorName=${visit.doctorName}" class="btn btn-primary btn-sm">
+                                                        <i class="fas fa-star me-1"></i> Give Review
+                                                    </a>
+                                                </c:if>
+                                            </div>
+                                        </c:if>
                                     </div>
                                 </div>
                             </c:forEach>

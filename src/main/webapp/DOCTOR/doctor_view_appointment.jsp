@@ -81,6 +81,13 @@
                             <button type="submit" class="btn btn-sm btn-danger" title="Cancel Appointment"><i class="fa-solid fa-xmark"></i></button>
                         </form>
                     </c:if>
+                    <c:if test="${app.status == 'Confirmed'}">
+                        <form action="${pageContext.request.contextPath}/doctor/appointments" method="POST" class="d-inline">
+                            <input type="hidden" name="action" value="complete">
+                            <input type="hidden" name="appointmentId" value="${app.appointment_ID}">
+                            <button type="submit" class="btn btn-sm btn-primary" title="Mark as Completed"><i class="fa-solid fa-check-double"></i></button>
+                        </form>
+                    </c:if>
                 </td>
             </tr>
             </c:forEach>

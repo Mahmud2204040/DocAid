@@ -1,8 +1,8 @@
 classes\SearchHospitalServlet.class
 classes\BookAppointmentServlet.class
 classes\DoctorScheduleServlet.class
+classes\SearchServlet.class
 classes\AppointmentServlet.class
-classes\SearchDoctorServlet.class
 classes\SearchPageDetails$SearchResult.class
 classes\HospitalProfileServlet.class
 classes\MedicalTest.class
@@ -19,6 +19,7 @@ classes\AffiliationRequestServlet.class
 classes\Admin.class
 classes\Hospital$AffiliatedDoctor.class
 classes\GetDoctorScheduleServlet.class
+classes\SubmitReviewServlet.class
 classes\Admin$Specialty.class
 classes\Doctor$Review.class
 classes\Admin$ActiveMonitor.class
@@ -31,7 +32,7 @@ classes\DbConnector.class
 classes\DbConnectionTest.class
 classes\Hospital$AppointmentDetail.class
 classes\PastVisitsServlet.class
-classes\Payment.class
+classes\DoctorService.class
 classes\AppointmentDetails.class
 classes\HospitalDoctorSearchServlet.class
 classes\SearchPageDetails.class
@@ -44,7 +45,6 @@ classes\Admin$PendingReview.class
 classes\Admin$DashboardAnalytics.class
 classes\ProfileServlet.class
 classes\Admin$AppointmentReport.class
-classes\Availability.class
 classes\HospitalMedicalTestServlet.class
 classes\DoctorProfileServlet.class
 classes\HospitalAppointmentServlet.class

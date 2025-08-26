@@ -118,6 +118,8 @@ public class DoctorAppointmentServlet extends HttpServlet {
             newStatus = "Confirmed";
         } else if ("cancel".equals(action)) {
             newStatus = "Cancelled";
+        } else if ("complete".equals(action)) {
+            newStatus = "Completed";
         }
 
         if (!newStatus.isEmpty()) {

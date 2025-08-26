@@ -2,41 +2,63 @@ package classes;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import javax.sql.DataSource;
+import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.junit.MockitoJUnitRunner;
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
+import java.lang.reflect.Field;
 
+@RunWith(MockitoJUnitRunner.class)
 public class DbConnectorTest {
 
+    @Mock
+    private DataSource mockDataSource;
+
+    @Mock
+    private Connection mockConnection;
+
+    @Before
+    public void setUp() throws Exception {
+        // Use reflection to set the static dataSource field in DbConnector
+        Field dataSourceField = DbConnector.class.getDeclaredField("dataSource");
+        dataSourceField.setAccessible(true);
+        dataSourceField.set(null, mockDataSource);
+
+        when(mockDataSource.getConnection()).thenReturn(mockConnection);
+    }
+
     @Test
-    public void testGetConnection_Success() {
-        Connection con = null;
+    public void testGetConnection_Success() throws SQLException {
+        when(mockConnection.isValid(anyInt())).thenReturn(true);
+        Connection con = DbConnector.getConnection();
+        assertNotNull("Connection should not be null", con);
+        verify(mockDataSource).getConnection();
+        verify(mockConnection).isValid(anyInt());
+    }
+
+    @Test
+    public void testGetConnection_Failure() throws SQLException {
+        when(mockDataSource.getConnection()).thenThrow(new SQLException("Test Exception"));
         try {
-            con = DbConnector.getConnection();
-            assertNotNull("Connection should not be null", con);
-            assertTrue("Connection should be valid", con.isValid(2));
+            DbConnector.getConnection();
+            fail("SQLException was expected but not thrown");
         } catch (SQLException e) {
-            fail("SQLException occurred during connection attempt: " + e.getMessage());
-        } catch (Exception e) {
-            fail("Unexpected exception occurred: " + e.getMessage());
-        } finally {
-            if (con != null) {
-                try {
-                    con.close();
-                    System.out.println("Connection closed successfully in test.");
-                } catch (SQLException e) {
-                    System.err.println("Warning: Failed to close connection in test - " + e.getMessage());
-                }
-            }
+            assertEquals("Test Exception", e.getMessage());
         }
     }
 
     @Test
-    public void testGetConnection_FailureHandling() {
-        // Note: This is a placeholder for testing failure scenarios.
-        // Since DbConnector loads properties statically, simulating failure without
-        // altering the environment is tricky without mocks.
-        // Consider using a mocking framework like Mockito to simulate property load failures
-        // or invalid credentials in a future iteration.
-        System.out.println("Reminder: Implement failure test with mocking if needed.");
+    public void testGetConnection_InvalidConnection() throws SQLException {
+        when(mockConnection.isValid(anyInt())).thenReturn(false);
+        try {
+            DbConnector.getConnection();
+            fail("SQLException was expected but not thrown");
+        } catch (SQLException e) {
+            assertEquals("Failed to get a valid connection from the pool.", e.getMessage());
+        }
     }
 }

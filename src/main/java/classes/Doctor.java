@@ -5,6 +5,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Date;
@@ -31,7 +32,6 @@ public class Doctor extends User {
     private String specialtyName;
     private Integer hospitalId;
     private String hospitalName;
-    private String profileImage;
     private boolean isVerified;
     private double rating;
     private int reviewCount;
@@ -83,8 +83,6 @@ public class Doctor extends User {
     public void setHospitalId(Integer hospitalId) { this.hospitalId = hospitalId; }
     public String getHospitalName() { return hospitalName; }
     public void setHospitalName(String hospitalName) { this.hospitalName = hospitalName; }
-    public String getProfileImage() { return profileImage; }
-    public void setProfileImage(String profileImage) { this.profileImage = profileImage; }
     public boolean isVerified() { return isVerified; }
     public void setVerified(boolean isVerified) { this.isVerified = isVerified; }
     public double getRating() { return rating; }
@@ -273,7 +271,6 @@ public class Doctor extends User {
                     doctor.setPhone(rs.getString("contact_no"));
                     doctor.setSpecialtyName(rs.getString("specialty_name"));
                     doctor.setHospitalName(rs.getString("hospital_name"));
-                    doctor.setProfileImage(rs.getString("profile_image"));
                     doctor.setVerified(rs.getBoolean("is_verified"));
                     doctor.setRating(rs.getDouble("rating"));
                     doctor.setReviewCount(rs.getInt("review_count"));

@@ -38,10 +38,10 @@
             String headerLastName = headerRs.getString("last_name");
             headerPatientName = headerFirstName + " " + headerLastName;
             headerGender = headerRs.getString("gender");
-            headerPhone = headerRs.getString("phone");
-            headerLocation = headerRs.getString("location");
+            headerPhone = headerRs.getString("contact_no");
+            headerLocation = headerRs.getString("address");
             headerDateOfBirth = headerRs.getString("date_of_birth");
-            headerBloodGroup = headerRs.getString("blood_group");
+            headerBloodGroup = headerRs.getString("blood_type");
             headerEmail = headerRs.getString("email");
 
             if (headerFirstName != null && !headerFirstName.isEmpty() && headerLastName != null && !headerLastName.isEmpty()) {
@@ -388,7 +388,7 @@
                     
                     <!-- Find Doctor Button -->
                     <li class="nav-item">
-                        <a class="nav-link btn btn-outline-primary me-3" href="${pageContext.request.contextPath}/PATIENT/search_page.jsp" style="border-radius: 20px; padding: 8px 16px; border-width: 2px;">
+                        <a class="nav-link btn btn-outline-primary me-3" href="${pageContext.request.contextPath}/PATIENT/search.jsp" style="border-radius: 20px; padding: 8px 16px; border-width: 2px;">
                             <i class="bi bi-person-badge"></i> Find Doctor
                         </a>
                     </li>

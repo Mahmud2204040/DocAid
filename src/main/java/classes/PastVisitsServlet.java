@@ -21,6 +21,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashSet;
+import java.util.Set;
 
 @WebServlet("/patient/past-visits")
 public class PastVisitsServlet extends HttpServlet {
@@ -41,6 +43,9 @@ public class PastVisitsServlet extends HttpServlet {
         String lastVisitDate = "N/A";
 
         try (Connection con = DbConnector.getConnection()) {
+            int patientId = getPatientIdFromUserId(con, userId);
+            Set<Integer> reviewedDoctorIds = getReviewedDoctorIds(con, patientId);
+
             String sql = "SELECT * FROM v_appointment_details WHERE user_id = ? AND appointment_status = 'Completed' ORDER BY appointment_date DESC, appointment_time DESC";
 
             try (PreparedStatement pst = con.prepareStatement(sql)) {
@@ -50,6 +55,8 @@ public class PastVisitsServlet extends HttpServlet {
 
                     while (rs.next()) {
                         Map<String, Object> row = new HashMap<>();
+                        int doctorId = rs.getInt("doctor_id");
+                        row.put("doctorId", doctorId);
                         String doctorName = rs.getString("doctor_name");
                         row.put("doctorName", doctorName);
                         String specialty = rs.getString("specialty_name");
@@ -57,6 +64,7 @@ public class PastVisitsServlet extends HttpServlet {
                         row.put("appointmentDate", rs.getString("appointment_date"));
                         row.put("appointmentTime", rs.getString("appointment_time"));
                         row.put("status", rs.getString("appointment_status"));
+                        row.put("hasReviewed", reviewedDoctorIds.contains(doctorId));
 
                         String doctorInitial = (doctorName != null && !doctorName.isEmpty()) ? String.valueOf(doctorName.charAt(0)).toUpperCase() : "D";
                         row.put("doctorInitial", doctorInitial);
@@ -97,5 +105,32 @@ public class PastVisitsServlet extends HttpServlet {
             logger.log(Level.SEVERE, "Database error in PastVisitsServlet", e);
             throw new ServletException("Database error", e);
         }
+    }
+
+    private int getPatientIdFromUserId(Connection con, int userId) throws SQLException {
+        String sql = "SELECT patient_id FROM Patient WHERE user_id = ?";
+        try (PreparedStatement pst = con.prepareStatement(sql)) {
+            pst.setInt(1, userId);
+            try (ResultSet rs = pst.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("patient_id");
+                }
+            }
+        }
+        return -1;
+    }
+
+    private Set<Integer> getReviewedDoctorIds(Connection con, int patientId) throws SQLException {
+        Set<Integer> reviewedDoctorIds = new HashSet<>();
+        String sql = "SELECT doctor_id FROM Reviews WHERE patient_id = ?";
+        try (PreparedStatement pst = con.prepareStatement(sql)) {
+            pst.setInt(1, patientId);
+            try (ResultSet rs = pst.executeQuery()) {
+                while (rs.next()) {
+                    reviewedDoctorIds.add(rs.getInt("doctor_id"));
+                }
+            }
+        }
+        return reviewedDoctorIds;
     }
 }

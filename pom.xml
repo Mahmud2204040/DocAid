@@ -27,9 +27,15 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+        <groupId>org.mockito</groupId>
+        <artifactId>mockito-core</artifactId>
+        <version>5.11.0</version>
+        <scope>test</scope>
+    </dependency>
+    <dependency>
         <groupId>mysql</groupId>
         <artifactId>mysql-connector-java</artifactId>
-        <version>8.0.33</version>
+                <version>8.0.33</version>
     </dependency>
        
 <dependency>
@@ -56,12 +62,7 @@
         <version>3.0.0</version>
     </dependency>
     
-    <!-- JSTL Implementation -->
-    <dependency>
-        <groupId>org.glassfish.web</groupId>
-        <artifactId>jakarta.servlet.jsp.jstl</artifactId>
-        <version>3.0.1</version>
-    </dependency>
+    
 
   </dependencies>
 

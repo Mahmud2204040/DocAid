@@ -121,10 +121,12 @@ CREATE TABLE Doctor (
     longitude DECIMAL(11, 8),
     specialty_id INT,
     hospital_id INT,
-    profile_image VARCHAR(255) DEFAULT NULL,
     is_verified BOOLEAN DEFAULT FALSE,
-    rating DECIMAL(3, 2) DEFAULT 0.00,
-    review_count INT DEFAULT 0,
+
+    -- Denormalized columns for performance. Automatically updated by triggers.
+    rating DECIMAL(3, 2) DEFAULT 0.00, -- Holds the calculated average rating for the doctor.
+    review_count INT DEFAULT 0, -- Holds the total number of reviews for the doctor.
+
     is_available_for_patients BOOLEAN DEFAULT TRUE,
     phone VARCHAR(20) DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -409,7 +411,12 @@ INSERT INTO Monitors (admin_id, monitored_user_id, monitoring_start_date, monito
 -- TRIGGERS FOR RATING
 -- =====================================================
 
--- Create trigger to update doctor rating automatically
+-- These triggers ensure that the `rating` and `review_count` columns in the `Doctor` table
+-- are automatically updated whenever a review is inserted, updated, or deleted.
+-- This is a denormalization technique to improve performance by avoiding costly
+-- calculations on every read operation.
+
+-- Create trigger to update doctor rating automatically after a new review is inserted.
 DELIMITER //
 CREATE TRIGGER trg_update_doctor_rating
     AFTER INSERT ON Reviews
@@ -429,6 +436,7 @@ BEGIN
     WHERE doctor_id = NEW.doctor_id;
 END//
 
+-- Create trigger to update doctor rating automatically after a review is updated.
 CREATE TRIGGER trg_update_doctor_rating_on_update
     AFTER UPDATE ON Reviews
     FOR EACH ROW
@@ -445,6 +453,17 @@ BEGIN
         WHERE doctor_id = NEW.doctor_id
     )
     WHERE doctor_id = NEW.doctor_id;
+END//
+
+-- Create trigger to update doctor rating automatically after a review is deleted.
+CREATE TRIGGER trg_update_doctor_rating_on_delete
+    AFTER DELETE ON Reviews
+    FOR EACH ROW
+BEGIN
+    UPDATE Doctor
+    SET rating = IFNULL((SELECT AVG(rating) FROM Reviews WHERE doctor_id = OLD.doctor_id), 0),
+        review_count = (SELECT COUNT(*) FROM Reviews WHERE doctor_id = OLD.doctor_id)
+    WHERE doctor_id = OLD.doctor_id;
 END//
 DELIMITER ;
 
@@ -468,7 +487,6 @@ SELECT
     d.address,
     d.latitude,
     d.longitude,
-    d.profile_image,
     d.is_verified,
     d.rating,
     d.review_count,
