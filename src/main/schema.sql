@@ -338,14 +338,14 @@ INSERT INTO Specialties (specialty_name) VALUES
 
 -- Insert sample users
 INSERT INTO Users (email, password, user_type) VALUES
-('admin1@hospital.com', 'hashed_password1', 'Admin'),
-('admin2@hospital.com', 'hashed_password2', 'Admin'),
-('hospital1@medical.com', 'hashed_password3', 'Hospital'),
-('hospital2@medical.com', 'hashed_password4', 'Hospital'),
-('doctor1@medical.com', 'hashed_password5', 'Doctor'),
-('doctor2@medical.com', 'hashed_password6', 'Doctor'),
-('patient1@email.com', 'hashed_password7', 'Patient'),
-('patient2@email.com', 'hashed_password8', 'Patient');
+('admin1@hospital.com', 'e10adc3949ba59abbe56e057f20f883e', 'Admin'),
+('admin2@hospital.com', 'e10adc3949ba59abbe56e057f20f883e', 'Admin'),
+('hospital1@medical.com', 'e10adc3949ba59abbe56e057f20f883e', 'Hospital'),
+('hospital2@medical.com', 'e10adc3949ba59abbe56e057f20f883e', 'Hospital'),
+('doctor1@medical.com', 'e10adc3949ba59abbe56e057f20f883e', 'Doctor'),
+('doctor2@medical.com', 'e10adc3949ba59abbe56e057f20f883e', 'Doctor'),
+('patient1@email.com', 'e10adc3949ba59abbe56e057f20f883e', 'Patient'),
+('patient2@email.com', 'e10adc3949ba59abbe56e057f20f883e', 'Patient');
 
 -- Insert sample admins
 INSERT INTO Admin (user_id, first_name, last_name) VALUES
