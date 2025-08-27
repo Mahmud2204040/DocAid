@@ -12,7 +12,10 @@ public class DbConnector {
             try {
                 String jdbcUrl = System.getenv("DATABASE_URL");
                 if (jdbcUrl == null || jdbcUrl.isEmpty()) {
-                    throw new SQLException("DATABASE_URL environment variable not set.");
+                    throw new SQLException("DATABASE_URL environment variable not set!");
+                }
+                if (!jdbcUrl.startsWith("jdbc:")) {
+                    jdbcUrl = "jdbc:" + jdbcUrl;
                 }
 
                 // Register JDBC driver (optional for modern JDBC drivers)
