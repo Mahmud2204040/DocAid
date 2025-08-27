@@ -26,13 +26,15 @@
                 </div>
             </div>
 
-            <div class="row mt-3">
+            <div class="row">
                 <div class="col-md-7">
                     <div class="doctor-location">
                         <i class="bi bi-geo-alt"></i>
                         <span><c:out value="${doctor.address}"/></span>
                     </div>
-                    
+                    <c:if test="${not empty doctor.hospitalName}">
+                        <p class="hospital mt-2"><strong>Hospital:</strong> <c:out value="${doctor.hospitalName}"/></p>
+                    </c:if>
                     <div class="doctor-rating">
                         <div class="rating-stars">
                             <c:forEach begin="1" end="5" var="star">
@@ -46,19 +48,10 @@
                     </div>
                 </div>
 
+                
                 <div class="col-md-5 doctor-meta">
                     <p class="fee"><strong>Fee:</strong> $<fmt:formatNumber value="${doctor.fee}" maxFractionDigits="0" /></p>
-                    <p class="experience"><strong>Experience:</strong> <c:out value="${doctor.expYears}"/> years</p>
-                    <c:if test="${not empty doctor.hospitalName}">
-                        <p class="hospital"><strong>Hospital:</strong> <c:out value="${doctor.hospitalName}"/></p>
-                    </c:if>
-                    <div class="doctor-badges">
-                        <c:if test="${doctor.verified}">
-                            <span class="badge-modern badge-info">
-                                <i class="bi bi-patch-check me-1"></i>Verified
-                            </span>
-                        </c:if>
-                    </div>
+                    <p class="experience"><strong>Experience:</strong> <c:out value="${doctor.expYears}"/> years</p>                    
                 </div>
             </div>
 

@@ -292,7 +292,7 @@
             align-items: center;
             gap: 0.5rem;
             color: var(--text-secondary);
-            font-size: 0.9375rem;
+            font-size: 1rem;
             margin-bottom: 1rem;
         }
         
@@ -300,7 +300,7 @@
             display: flex;
             align-items: center;
             gap: 0.5rem;
-            margin-bottom: 1.5rem;
+            margin-bottom: 0.2rem;
         }
         
         .rating-stars {
@@ -322,7 +322,7 @@
             display: flex;
             gap: 0.75rem;
             flex-wrap: wrap;
-            margin-bottom: 1.5rem;
+            margin-bottom: 0rem;
         }
         
         .badge-modern {
@@ -619,11 +619,11 @@
 
         <c:if test="${not empty searchResult}">
             <div class="container mt-5">
-                <h2>Search Results for "<c:out value='${param.q}'/>"</h2>
-                <p class="text-muted">Found ${searchResult.totalResults} doctors.</p>
-        
-                <div class="row justify-content-center">
+                <div class="row">
                     <div class="col-md-8">
+                        <h2>Search Results for "<c:out value='${param.q}'/>"</h2>
+                        <p class="text-muted">Found ${searchResult.totalResults} doctors.</p>
+                
                         <c:if test="${empty searchResult.doctors}">
                             <div class="alert alert-info" role="alert">
                                 No doctors found matching your search criteria.
@@ -656,6 +656,35 @@
                                 </ul>
                             </nav>
                         </c:if>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="blog-section">
+                            <h4 class="mb-4" style="font-weight: 700; color: var(--text-primary);">From Our Blog</h4>
+                            <div class="card mb-4 shadow-sm">
+                                <img src="https://www.mayoclinichealthsystem.org/-/media/national-files/images/hometown-health/2022/looking-at-screen-cranberry-sweater.jpg?sc_lang=en&hash=537EDAC1CC98E19CC45F858D7C0F3FCB" class="card-img-top" alt="Blog Image">
+                                <div class="card-body">
+                                    <h5 class="card-title" style="font-weight: 600;">A Guide to Medical Specialities</h5>
+                                    <p class="card-text text-muted">Choosing a medical specialty is a big decision. This guide will help you understand the different options...</p>
+                                    <a href="https://www.oxfordscholastica.com/blog/medicine-articles/a-guide-to-medical-specialities/" target="_blank" class="btn btn-primary mt-2">Read More <i class="bi bi-arrow-right"></i></a>
+                                </div>
+                            </div>
+                            <div class="card mb-4 shadow-sm">
+                                <img src="https://plus.unsplash.com/premium_photo-1658506671316-0b293df7c72b?fm=jpg&q=60&w=3000&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8ZG9jdG9yfGVufDB8fDB8fHww" class="card-img-top" alt="Blog Image">
+                                <div class="card-body">
+                                    <h5 class="card-title" style="font-weight: 600;">Primary Care vs. Specialist: What's the Difference?</h5>
+                                    <p class="card-text text-muted">Understand the difference between a primary care physician and a specialist, and when you should see each...</p>
+                                    <a href="https://www.san.health/blog/primary-care-vs-specialist-whats-the-difference-and-why-it-matters" target="_blank" class="btn btn-primary mt-2">Read More <i class="bi bi-arrow-right"></i></a>
+                                </div>
+                            </div>
+                            <div class="card shadow-sm">
+                                <img src="https://blog.practo.com/wp-content/uploads/2023/04/wa-webinar-5-13-1220x600.png" class="card-img-top" alt="Blog Image">
+                                <div class="card-body">
+                                    <h5 class="card-title" style="font-weight: 600;">How to Choose Your Doctor</h5>
+                                    <p class="card-text text-muted">Choosing a doctor is a big decision. Here are some tips to help you choose the right doctor for you...</p>
+                                    <a href="https://blog.practo.com/how-to-choose-your-doctor-listicle-medical-team-practo/" target="_blank" class="btn btn-primary mt-2">Read More <i class="bi bi-arrow-right"></i></a>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
