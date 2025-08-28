@@ -74,7 +74,7 @@
 
     <style>
         :root {
-            --background-color: #F0F8FF;
+            --background-color: #f8f9fa;
             --primary-color: #007BFF;
             --secondary-color: #28A745;
             --text-color: #333333;
@@ -372,9 +372,9 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item"><a class="nav-link" href="${pageContext.request.contextPath}/PATIENT/">Home</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#">About</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#">Services</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#">Contact</a></li>
+                    <li class="nav-item"><a class="nav-link" href="${pageContext.request.contextPath}/PATIENT/about.jsp">About</a></li>
+                    <li class="nav-item"><a class="nav-link" href="${pageContext.request.contextPath}/PATIENT/#services">Services</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#contact">Contact</a></li>
                 </ul>
 
                 <!-- Patient Actions -->
