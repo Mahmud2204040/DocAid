@@ -2,11 +2,7 @@
 
         
 
-    <%@ include file="patient_body.jsp" %>
-
-    <footer>
-        <%@ include file="../footer.jsp" %>
-    </footer>
+    <%@ include file="../body.jsp" %>
 
     <!-- Bootstrap JS and dependencies -->
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>

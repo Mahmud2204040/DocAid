@@ -239,7 +239,6 @@
                                     case "1": msg="Incorrect email or password. Please try again."; icon="fas fa-lock"; break;
                                     case "2": msg="Please enter both email and password.";          icon="fas fa-exclamation-circle"; break;
                                     case "3": msg="A server error occurred. Please try again.";     icon="fas fa-server"; break;
-                                    case "4": msg="Please sign in to search.";                      icon="fas fa-sign-in-alt"; break;
                                     default:  msg="Authentication failed. Please try again.";      icon="fas fa-times-circle";
                                 }
                         %>
