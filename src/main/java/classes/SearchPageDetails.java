@@ -15,10 +15,10 @@ public class SearchPageDetails {
         int totalResults = 0;
 
         List<Object> params = new ArrayList<>();
-        StringBuilder whereClause = new StringBuilder(" WHERE u.user_type = 'Doctor' ");
+        StringBuilder whereClause = new StringBuilder(" WHERE 1=1 ");
 
         if (query != null && !query.trim().isEmpty()) {
-            whereClause.append(" AND (CONCAT(d.first_name, ' ', d.last_name) LIKE ? OR s.specialty_name LIKE ? OR d.address LIKE ?) ");
+            whereClause.append(" AND (display_name LIKE ? OR specialty LIKE ? OR address LIKE ?) ");
             String searchPattern = "%" + query + "%";
             params.add(searchPattern);
             params.add(searchPattern);
@@ -26,16 +26,14 @@ public class SearchPageDetails {
         }
 
         if (filterRating != null && !filterRating.isEmpty()) {
-            whereClause.append(" AND d.rating >= ? ");
+            whereClause.append(" AND rating >= ? ");
             params.add(Double.parseDouble(filterRating));
         }
 
-        if (filterAvailability != null && "yes".equalsIgnoreCase(filterAvailability)) {
-            whereClause.append(" AND d.is_available_for_patients = TRUE ");
-        }
+        
 
         try {
-            StringBuilder countSql = new StringBuilder("SELECT COUNT(*) FROM Doctor d JOIN Users u ON d.user_id = u.user_id LEFT JOIN Specialties s ON d.specialty_id = s.specialty_id ");
+            StringBuilder countSql = new StringBuilder("SELECT COUNT(*) FROM v_doctor_search ");
             countSql.append(whereClause);
 
             try (PreparedStatement countStmt = con.prepareStatement(countSql.toString())) {
@@ -49,14 +47,11 @@ public class SearchPageDetails {
             }
 
             StringBuilder sql = new StringBuilder();
-            sql.append("SELECT d.doctor_id, d.user_id, CONCAT(d.first_name, ' ', d.last_name) as display_name, d.first_name, d.last_name, d.gender, d.license_number, d.exp_years as experience, d.bio, d.fee, d.address, d.latitude, d.longitude, d.is_verified, d.rating, d.review_count, d.is_available_for_patients, d.phone, s.specialty_name as specialty, s.specialty_id, h.hospital_name, h.hospital_id, h.address as hospital_address, u.email, u.created_at, u.updated_at ");
+            sql.append("SELECT doctor_id, user_id, display_name, first_name, last_name, gender, license_number, experience, bio, fee, address, latitude, longitude, rating, review_count, appointment_contact AS phone, specialty, specialty_id, hospital_name, hospital_id, hospital_address, email, created_at, updated_at ");
             if (userLat != null && userLng != null) {
-                sql.append(", (6371 * acos(cos(radians(?)) * cos(radians(d.latitude)) * cos(radians(d.longitude) - radians(?)) + sin(radians(?)) * sin(radians(d.latitude)))) AS distance");
+                sql.append(", (6371 * acos(cos(radians(?)) * cos(radians(latitude)) * cos(radians(longitude) - radians(?)) + sin(radians(?)) * sin(radians(latitude)))) AS distance");
             }
-            sql.append(" FROM Doctor d ");
-            sql.append(" JOIN Users u ON d.user_id = u.user_id ");
-            sql.append(" LEFT JOIN Specialties s ON d.specialty_id = s.specialty_id ");
-            sql.append(" LEFT JOIN Hospital h ON d.hospital_id = h.hospital_id ");
+            sql.append(" FROM v_doctor_search ");
             sql.append(whereClause);
 
             sql.append(" ORDER BY ");
@@ -66,17 +61,17 @@ public class SearchPageDetails {
                     if (userLat != null && userLng != null) {
                         orderClause = "distance ASC";
                     } else {
-                        orderClause = "d.doctor_id DESC";
+                        orderClause = "doctor_id DESC";
                     }
                     break;
                 case "rating":
-                    orderClause = "d.rating DESC";
+                    orderClause = "rating DESC";
                     break;
                 case "name":
                     orderClause = "display_name ASC";
                     break;
                 default:
-                    orderClause = "d.doctor_id DESC";
+                    orderClause = "doctor_id DESC";
             }
             sql.append(orderClause);
 
@@ -130,10 +125,8 @@ public class SearchPageDetails {
         doctor.setSpecialty(rs.getString("specialty"));
         doctor.setHospitalName(rs.getString("hospital_name"));
         doctor.setSpecialtyId(rs.getObject("specialty_id", Integer.class));
-        doctor.setVerified(rs.getBoolean("is_verified"));
         doctor.setRating(rs.getDouble("rating"));
         doctor.setReviewCount(rs.getInt("review_count"));
-        doctor.setAvailableForPatients(rs.getBoolean("is_available_for_patients"));
         doctor.setPhone(rs.getString("phone"));
         doctor.setCreatedAt(rs.getTimestamp("created_at"));
         doctor.setUpdatedAt(rs.getTimestamp("updated_at"));

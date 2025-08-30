@@ -42,12 +42,11 @@
         response.setDateHeader("Expires", 0);
         
         // Redirect to login page with success message
-        response.sendRedirect(request.getContextPath() + "/log.jsp?logout=success");
+        response.sendRedirect(request.getContextPath() + "/index.jsp");
         
     } catch (Exception e) {
         e.printStackTrace();
-        // Even if there's an error, redirect to login
-        response.sendRedirect(request.getContextPath() + "/log.jsp?logout=error");
+        response.sendRedirect(request.getContextPath() + "/index.jsp");
     }
 %>
 
@@ -114,7 +113,7 @@
     <script>
         // Fallback redirect in case JSP redirect doesn't work
         setTimeout(function() {
-            window.location.href = '<%= request.getContextPath() %>/log.jsp?logout=success';
+            window.location.href = '<%= request.getContextPath() %>/index.jsp';
         }, 2000);
         
         // Clear any local storage or session storage

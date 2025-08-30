@@ -83,13 +83,11 @@ public class PatientViewDoctorProfileServlet extends HttpServlet {
                     doctor.setBio(rs.getString("bio"));
                     doctor.setFee(rs.getBigDecimal("fee"));
                     doctor.setAddress(rs.getString("address"));
-                    doctor.setPhone(rs.getString("phone"));
+                    doctor.setPhone(rs.getString("appointment_contact"));
                     doctor.setSpecialtyName(rs.getString("specialty"));
-                    doctor.setHospitalName(rs.getString("hospital_name"));
-                    doctor.setVerified(rs.getBoolean("is_verified"));
+                                                            doctor.setHospitalName(rs.getString("hospital_name"));
                     doctor.setRating(rs.getDouble("rating"));
                     doctor.setReviewCount(rs.getInt("review_count"));
-                    doctor.setAvailableForPatients(rs.getBoolean("is_available_for_patients"));
                     doctor.setEmail(rs.getString("email"));
                     return doctor;
                 }

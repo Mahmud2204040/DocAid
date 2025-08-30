@@ -194,6 +194,7 @@
         .detail-icon.location { background: var(--primary-gradient); }
         .detail-icon.website { background: var(--success-gradient); }
         .detail-icon.email { background: var(--warning-gradient); }
+        .detail-icon.phone { background: linear-gradient(135deg, #2af598 0%, #009efd 100%); }
 
         .detail-text {
             flex: 1;
@@ -490,6 +491,30 @@
                                                 <c:out value="${hospital.email}"/>
                                             </a>
                                         </div>
+                                    </div>
+                                </div>
+                            </c:if>
+
+                            <c:if test="${not empty hospital.primaryContact}">
+                                <div class="detail-item">
+                                    <div class="detail-icon phone">
+                                        <i class="bi bi-telephone"></i>
+                                    </div>
+                                    <div class="detail-text">
+                                        <div class="detail-label">Primary Contact</div>
+                                        <div class="detail-value"><c:out value="${hospital.primaryContact}"/></div>
+                                    </div>
+                                </div>
+                            </c:if>
+
+                            <c:if test="${not empty hospital.emergencyContact}">
+                                <div class="detail-item">
+                                    <div class="detail-icon phone">
+                                        <i class="bi bi-telephone-fill"></i>
+                                    </div>
+                                    <div class="detail-text">
+                                        <div class="detail-label">Emergency Contact</div>
+                                        <div class="detail-value"><c:out value="${hospital.emergencyContact}"/></div>
                                     </div>
                                 </div>
                             </c:if>

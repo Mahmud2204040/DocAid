@@ -54,8 +54,14 @@
                     </select>
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label">Contact Phone</label>
-                    <input type="tel" class="form-control" name="phone" value="${doctorProfile.phone}">
+                    <label class="form-label">Primary Contact</label>
+                    <input type="tel" class="form-control" name="primary_contact" value="${primaryContact}" placeholder="Your main contact number">
+                    <div class="form-text">This number is for hospital use.</div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Appointment Contact</label>
+                    <input type="tel" class="form-control" name="appointment_contact" value="${appointmentContact}" placeholder="Number for patient appointments">
+                     <div class="form-text">This number is for patient use.</div>
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">Address</label>

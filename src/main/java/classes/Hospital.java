@@ -45,6 +45,14 @@ public class Hospital extends User {
     public double getLongitude() { return longitude; }
     public void setLongitude(double longitude) { this.longitude = longitude; }
 
+    private String primaryContact;
+    private String emergencyContact;
+
+    public String getPrimaryContact() { return primaryContact; }
+    public void setPrimaryContact(String primaryContact) { this.primaryContact = primaryContact; }
+    public String getEmergencyContact() { return emergencyContact; }
+    public void setEmergencyContact(String emergencyContact) { this.emergencyContact = emergencyContact; }
+
     // Inner DTO classes
     public static class DashboardAnalytics {
         public int affiliatedDoctorsCount, upcomingAppointmentsCount, testsAvailableCount;
@@ -351,5 +359,31 @@ public class Hospital extends User {
                 }
             }
         }
+    }
+
+    public static Hospital getHospitalById(Connection con, int hospitalId) throws SQLException {
+        Hospital hospital = null;
+        String sql = "SELECT * FROM v_hospital_details WHERE hospital_id = ?";
+        
+        try (PreparedStatement pstmt = con.prepareStatement(sql)) {
+            pstmt.setInt(1, hospitalId);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    hospital = new Hospital();
+                    hospital.setHospitalId(rs.getInt("hospital_id"));
+                    hospital.setId(rs.getInt("user_id"));
+                    hospital.setHospitalName(rs.getString("hospital_name"));
+                    hospital.setHospitalBio(rs.getString("hospital_bio"));
+                    hospital.setAddress(rs.getString("address"));
+                    hospital.setWebsite(rs.getString("website"));
+                    hospital.setLatitude(rs.getDouble("latitude"));
+                    hospital.setLongitude(rs.getDouble("longitude"));
+                    hospital.setEmail(rs.getString("email"));
+                    hospital.setPrimaryContact(rs.getString("primary_contact"));
+                    hospital.setEmergencyContact(rs.getString("emergency_contact"));
+                }
+            }
+        }
+        return hospital;
     }
 }

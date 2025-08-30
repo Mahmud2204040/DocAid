@@ -78,8 +78,10 @@ public class DoctorProfileServlet extends HttpServlet {
                     doctorProfile.setFee(rs.getBigDecimal("fee"));
                     doctorProfile.setAddress(rs.getString("address"));
                     doctorProfile.setPhone(rs.getString("contact_no"));
-                    doctorProfile.setSpecialty(rs.getString("specialty_name"));
+                                        doctorProfile.setSpecialty(rs.getString("specialty_name"));
                     doctorProfile.setHospitalName(rs.getString("hospital_name"));
+                    doctorProfile.setRating(rs.getDouble("rating"));
+                    doctorProfile.setReviewCount(rs.getInt("review_count"));
                     // You would also set hospital name, etc.
                     // request.setAttribute("hospitalName", rs.getString("hospital_name"));
                 } else {

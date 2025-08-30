@@ -1,57 +1,56 @@
+
 package classes;
 
-import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
-
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.List;
 
 @WebServlet("/patient/hospital_profile")
 public class HospitalProfileServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        HttpSession session = request.getSession(false);
-        if (session == null || session.getAttribute("user_id") == null) {
-            response.sendRedirect(request.getContextPath() + "/login.jsp");
-            return;
-        }
-
-        String hospitalIdStr = request.getParameter("id");
+        String hospitalIdStr = request.getParameter("hospital_id");
         if (hospitalIdStr == null || hospitalIdStr.isEmpty()) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Hospital ID is required.");
             return;
         }
 
-        int hospitalId = Integer.parseInt(hospitalIdStr);
+        // Get user role from session
+        jakarta.servlet.http.HttpSession session = request.getSession(false);
+        String viewerRole = (session != null) ? (String) session.getAttribute("user_type") : null;
 
         try (Connection con = DbConnector.getConnection()) {
-            Hospital hospital = new Hospital();
-            hospital.setHospitalId(hospitalId);
-            hospital.loadDetails();
+            int hospitalId = Integer.parseInt(hospitalIdStr);
+            
+            Hospital hospital = Hospital.getHospitalById(con, hospitalId);
 
-            if (hospital.getHospitalName() == null) {
+            if (hospital == null) {
                 response.sendError(HttpServletResponse.SC_NOT_FOUND, "Hospital not found.");
                 return;
             }
 
-            List<Hospital.MedicalTestRecord> medicalTests = hospital.getMedicalTests();
+            // If the viewer is a Doctor, hide the emergency contact
+            if ("Doctor".equals(viewerRole)) {
+                hospital.setEmergencyContact(null);
+            }
 
-            request.setAttribute("hospital", hospital);
+            // Fetch medical tests and add to request
+            java.util.List<classes.Hospital.MedicalTestRecord> medicalTests = hospital.getMedicalTests();
             request.setAttribute("medicalTests", medicalTests);
+            
+            request.setAttribute("hospital", hospital);
+            request.getRequestDispatcher("/PATIENT/hospital_profile.jsp").forward(request, response);
 
-            RequestDispatcher dispatcher = request.getRequestDispatcher("/PATIENT/hospital_profile.jsp");
-            dispatcher.forward(request, response);
-
+        } catch (NumberFormatException e) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid Hospital ID format.");
         } catch (SQLException e) {
-            throw new ServletException("Database error while fetching hospital profile.", e);
+            throw new ServletException("Database error while fetching hospital details.", e);
         }
     }
 }

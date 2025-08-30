@@ -38,6 +38,22 @@
                         <label for="website" class="form-label">Website</label>
                         <input type="url" class="form-control" id="website" name="website" value="<c:out value='${hospital.website}'/>">
                     </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="primary_contact" class="form-label">Primary Contact</label>
+                                <input type="tel" class="form-control" id="primary_contact" name="primary_contact" value="<c:out value='${primaryContact}'/>">
+                                <div class="form-text">The main contact number for the hospital.</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="emergency_contact" class="form-label">Emergency Contact</label>
+                                <input type="tel" class="form-control" id="emergency_contact" name="emergency_contact" value="<c:out value='${emergencyContact}'/>">
+                                <div class="form-text">The contact number for patient emergencies.</div>
+                            </div>
+                        </div>
+                    </div>
                     <div class="mb-3">
                         <label for="address" class="form-label">Address</label>
                         <textarea class="form-control" id="address" name="address" rows="3" required><c:out value='${hospital.address}'/></textarea>

@@ -15,7 +15,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 /**
- * Servlet to handle fetching and updating a doctor's profile.
+ * Servlet to handle fetching and updating a doctor's profile, including multiple contact types.
  */
 @WebServlet("/doctor/update-profile")
 public class DoctorUpdateProfileServlet extends HttpServlet {
@@ -26,14 +26,23 @@ public class DoctorUpdateProfileServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         HttpSession session = request.getSession(false);
         if (session == null || session.getAttribute("user_id") == null) {
-            response.sendRedirect(request.getContextPath() + "/login.jsp");
+            response.sendRedirect(request.getContextPath() + "/log.jsp");
             return;
         }
 
         Integer userId = (Integer) session.getAttribute("user_id");
         Doctor doctorProfile = new Doctor();
+        String primaryContact = "";
+        String appointmentContact = "";
 
-        String sql = "SELECT d.*, uc.contact_no FROM Doctor d LEFT JOIN User_Contact uc ON d.user_id = uc.user_id WHERE d.user_id = ?;";
+        // This query fetches the doctor's main details and pivots the contact numbers into columns
+        String sql = "SELECT d.*, " +
+                     "MAX(CASE WHEN uc.contact_type = 'Primary' THEN uc.contact_no END) AS primary_contact, " +
+                     "MAX(CASE WHEN uc.contact_type = 'Appointment' THEN uc.contact_no END) AS appointment_contact " +
+                     "FROM Doctor d " +
+                     "LEFT JOIN User_Contact uc ON d.user_id = uc.user_id " +
+                     "WHERE d.user_id = ? " +
+                     "GROUP BY d.doctor_id";
 
         try (Connection conn = DbConnector.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -46,7 +55,9 @@ public class DoctorUpdateProfileServlet extends HttpServlet {
                     doctorProfile.setBio(rs.getString("bio"));
                     doctorProfile.setFee(rs.getBigDecimal("fee"));
                     doctorProfile.setAddress(rs.getString("address"));
-                    doctorProfile.setPhone(rs.getString("contact_no"));
+                    
+                    primaryContact = rs.getString("primary_contact");
+                    appointmentContact = rs.getString("appointment_contact");
                 }
             }
         } catch (SQLException e) {
@@ -54,6 +65,9 @@ public class DoctorUpdateProfileServlet extends HttpServlet {
         }
 
         request.setAttribute("doctorProfile", doctorProfile);
+        request.setAttribute("primaryContact", primaryContact != null ? primaryContact : "");
+        request.setAttribute("appointmentContact", appointmentContact != null ? appointmentContact : "");
+        
         RequestDispatcher dispatcher = request.getRequestDispatcher("/DOCTOR/update_profile.jsp");
         dispatcher.forward(request, response);
     }
@@ -63,7 +77,7 @@ public class DoctorUpdateProfileServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         HttpSession session = request.getSession(false);
         if (session == null || session.getAttribute("user_id") == null) {
-            response.sendRedirect(request.getContextPath() + "/login.jsp");
+            response.sendRedirect(request.getContextPath() + "/log.jsp");
             return;
         }
 
@@ -81,7 +95,10 @@ public class DoctorUpdateProfileServlet extends HttpServlet {
         String bio = request.getParameter("bio");
         BigDecimal fee = new BigDecimal(request.getParameter("fee"));
         String address = request.getParameter("address");
-        String phone = request.getParameter("phone");
+        
+        // Get the two contact numbers
+        String primaryContact = request.getParameter("primary_contact");
+        String appointmentContact = request.getParameter("appointment_contact");
 
         Connection conn = null;
         try {
@@ -101,14 +118,11 @@ public class DoctorUpdateProfileServlet extends HttpServlet {
                 pstmt.executeUpdate();
             }
 
-            // 2. Update User_Contact table (UPSERT logic)
-            String sqlContact = "INSERT INTO User_Contact (user_id, contact_no, contact_type) VALUES (?, ?, 'Primary') " +
-                                "ON DUPLICATE KEY UPDATE contact_no = VALUES(contact_no);";
-            try (PreparedStatement pstmt = conn.prepareStatement(sqlContact)) {
-                pstmt.setInt(1, userId);
-                pstmt.setString(2, phone);
-                pstmt.executeUpdate();
-            }
+            // 2. Update User_Contact table for Primary contact
+            upsertContact(conn, userId, primaryContact, "Primary");
+
+            // 3. Update User_Contact table for Appointment contact
+            upsertContact(conn, userId, appointmentContact, "Appointment");
 
             conn.commit(); // Commit transaction
             session.setAttribute("message", "Profile updated successfully!");
@@ -124,5 +138,31 @@ public class DoctorUpdateProfileServlet extends HttpServlet {
         }
 
         response.sendRedirect(request.getContextPath() + "/doctor/profile");
+    }
+
+    /**
+     * Helper method to insert or update a contact number.
+     * Deletes the contact if the number is empty or null.
+     */
+    private void upsertContact(Connection conn, int userId, String contactNo, String contactType) throws SQLException {
+        // If the contact number is empty, delete the record
+        if (contactNo == null || contactNo.trim().isEmpty()) {
+            String sqlDelete = "DELETE FROM User_Contact WHERE user_id = ? AND contact_type = ?";
+            try (PreparedStatement pstmt = conn.prepareStatement(sqlDelete)) {
+                pstmt.setInt(1, userId);
+                pstmt.setString(2, contactType);
+                pstmt.executeUpdate();
+            }
+        } else {
+            // Otherwise, insert or update the record
+            String sqlUpsert = "INSERT INTO User_Contact (user_id, contact_no, contact_type) VALUES (?, ?, ?) " +
+                               "ON DUPLICATE KEY UPDATE contact_no = VALUES(contact_no)";
+            try (PreparedStatement pstmt = conn.prepareStatement(sqlUpsert)) {
+                pstmt.setInt(1, userId);
+                pstmt.setString(2, contactNo.trim());
+                pstmt.setString(3, contactType);
+                pstmt.executeUpdate();
+            }
+        }
     }
 }

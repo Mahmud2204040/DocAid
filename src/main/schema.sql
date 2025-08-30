@@ -121,14 +121,11 @@ CREATE TABLE Doctor (
     longitude DECIMAL(11, 8),
     specialty_id INT,
     hospital_id INT,
-    is_verified BOOLEAN DEFAULT FALSE,
 
     -- Denormalized columns for performance. Automatically updated by triggers.
     rating DECIMAL(3, 2) DEFAULT 0.00, -- Holds the calculated average rating for the doctor.
     review_count INT DEFAULT 0, -- Holds the total number of reviews for the doctor.
 
-    is_available_for_patients BOOLEAN DEFAULT TRUE,
-    phone VARCHAR(20) DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE,
@@ -149,10 +146,10 @@ CREATE TABLE User_Contact (
     contact_id INT PRIMARY KEY AUTO_INCREMENT,
     user_id INT NOT NULL,
     contact_no VARCHAR(20) NOT NULL,
-    contact_type ENUM('Primary', 'Secondary', 'Emergency', 'General', 'Appointment') DEFAULT 'Primary',
+    contact_type ENUM('Primary', 'Emergency', 'Appointment') NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE,
-    UNIQUE KEY unique_user_contact (user_id, contact_no),
+    UNIQUE KEY unique_user_contact (user_id, contact_type),
     INDEX idx_user_contact_no (contact_no)
 );
 
@@ -369,15 +366,19 @@ INSERT INTO Patient (user_id, first_name, last_name, gender, date_of_birth, bloo
 
 -- Insert sample contact information
 INSERT INTO User_Contact (user_id, contact_no, contact_type) VALUES
--- Patient Contacts (user_ids from the Users table are 7 and 8)
+-- Patient Contacts (user_ids: 7, 8)
 (7, '+1-555-0101', 'Primary'),
 (8, '+1-555-0102', 'Primary'),
--- Doctor Contacts (user_ids from the Users table are 5 and 6)
+-- Doctor Contacts (user_ids: 5, 6)
 (5, '+1-555-0201', 'Primary'),
+(5, '+1-555-0211', 'Appointment'),
 (6, '+1-555-0202', 'Primary'),
--- Hospital Contacts (user_ids from the Users table are 3 and 4)
-(3, '+1-555-0301', 'Emergency'),
-(4, '+1-555-0302', 'Emergency');
+(6, '+1-555-0222', 'Appointment'),
+-- Hospital Contacts (user_ids: 3, 4)
+(3, '+1-555-0301', 'Primary'),
+(3, '+1-555-0311', 'Emergency'),
+(4, '+1-555-0302', 'Primary'),
+(4, '+1-555-0322', 'Emergency');
 
 -- Insert sample appointments
 INSERT INTO Appointment (patient_id, doctor_id, appointment_date, appointment_time, appointment_status) VALUES
@@ -487,23 +488,22 @@ SELECT
     d.address,
     d.latitude,
     d.longitude,
-    d.is_verified,
     d.rating,
     d.review_count,
-    d.is_available_for_patients,
-    d.phone,                -- Added this line
     s.specialty_name as specialty,
     s.specialty_id,
     h.hospital_name,
     h.hospital_id,
     h.address as hospital_address,
     u.email,
+    uc.contact_no AS appointment_contact,
     u.created_at,
     u.updated_at
 FROM Doctor d
 LEFT JOIN Specialties s ON d.specialty_id = s.specialty_id
 LEFT JOIN Hospital h ON d.hospital_id = h.hospital_id
 JOIN Users u ON d.user_id = u.user_id
+LEFT JOIN User_Contact uc ON d.user_id = uc.user_id AND uc.contact_type = 'Appointment'
 WHERE u.user_type = 'Doctor';
 
 -- View for complete user information with type-specific details
@@ -545,6 +545,28 @@ JOIN Patient p ON ap.patient_id = p.patient_id
 JOIN Doctor d ON ap.doctor_id = d.doctor_id
 JOIN Hospital h ON d.hospital_id = h.hospital_id
 JOIN Specialties s ON d.specialty_id = s.specialty_id;
+
+-- View for hospital details, joining Hospital, Users, and Contacts
+CREATE OR REPLACE VIEW v_hospital_details AS
+SELECT 
+    h.hospital_id,
+    h.user_id,
+    h.hospital_name,
+    h.hospital_bio,
+    h.address,
+    h.website,
+    h.latitude,
+    h.longitude,
+    u.email,
+    primary_uc.contact_no AS primary_contact,
+    emergency_uc.contact_no AS emergency_contact,
+    u.created_at,
+    u.updated_at
+FROM Hospital h
+JOIN Users u ON h.user_id = u.user_id
+LEFT JOIN User_Contact primary_uc ON h.user_id = primary_uc.user_id AND primary_uc.contact_type = 'Primary'
+LEFT JOIN User_Contact emergency_uc ON h.user_id = emergency_uc.user_id AND emergency_uc.contact_type = 'Emergency'
+WHERE u.user_type = 'Hospital';
 
 -- =====================================================
 -- STORED PROCEDURES

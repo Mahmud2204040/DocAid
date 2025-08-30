@@ -154,9 +154,9 @@
         <h1>Medical and Health Centre Booking System</h1>
         <p class="lead">For all medical, health and wellness businesses</p>
         <div class="search-container">
-            <form onsubmit="window.location.href='${pageContext.request.contextPath}/log.jsp?error=4'; return false;">
+            <form action="${pageContext.request.contextPath}/search" method="get">
                 <div class="search-input-group">
-                    <input type="text" name="query" class="search-input"
+                    <input type="text" name="q" class="search-input"
                            placeholder="Search for doctors, specialties, conditions, procedures, or enter your location..."
                            aria-label="Search doctors and location" required>
                     <button class="search-btn" type="submit" aria-label="Search">

@@ -665,7 +665,7 @@
 
                                             <div class="doctor-actions mt-2">
                                                 <div class="action-buttons">
-                                                    <a href="${pageContext.request.contextPath}/patient/hospital_profile?id=${hospital.hospitalId}" class="btn btn-outline-modern">View Profile & Tests</a>
+                                                    <a href="${pageContext.request.contextPath}/patient/hospital_profile?hospital_id=${hospital.hospitalId}" class="btn btn-outline-modern">View Profile & Tests</a>
                                                 </div>
                                             </div>
                                         </div>
