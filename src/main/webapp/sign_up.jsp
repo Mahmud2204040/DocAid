@@ -537,6 +537,7 @@
                                 <button type="button" class="btn btn-secondary mt-2" onclick="getLocation('patient')">
                                     <i class="fas fa-map-marker-alt me-2"></i>Get My Location
                                 </button>
+                                <div id="patientLocationStatus" class="form-text mt-2"></div>
                             </div>
                         </div>
 
@@ -665,6 +666,7 @@
                                 <button type="button" class="btn btn-secondary mt-2" onclick="getLocation('doctor')">
                                     <i class="fas fa-map-marker-alt me-2"></i>Get My Location
                                 </button>
+                                <div id="doctorLocationStatus" class="form-text mt-2"></div>
                             </div>
                         </div>
 
@@ -728,6 +730,7 @@
                                 <button type="button" class="btn btn-secondary mt-2" onclick="getLocation('hospital')">
                                     <i class="fas fa-map-marker-alt me-2"></i>Get My Location
                                 </button>
+                                <div id="hospitalLocationStatus" class="form-text mt-2"></div>
                             </div>
                         </div>
 
@@ -761,19 +764,26 @@
 
     <script>
         function getLocation(rolePrefix) {
+            const statusDiv = document.getElementById(rolePrefix + 'LocationStatus');
+            statusDiv.innerHTML = '<i>Acquiring location...</i>';
+            statusDiv.className = 'form-text mt-2 text-muted';
+
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
                     (position) => {
                         document.getElementById(rolePrefix + 'Latitude').value = position.coords.latitude;
                         document.getElementById(rolePrefix + 'Longitude').value = position.coords.longitude;
-                        alert('Location captured successfully!');
+                        statusDiv.innerHTML = '<i class="fas fa-check-circle"></i> Location captured successfully!';
+                        statusDiv.className = 'form-text mt-2 text-success';
                     },
                     () => {
-                        alert('Unable to retrieve your location. Please enter your address manually.');
+                        statusDiv.innerHTML = '<i class="fas fa-times-circle"></i> Unable to retrieve your location. Give permission to access location. Please try again.';
+                        statusDiv.className = 'form-text mt-2 text-danger';
                     }
                 );
             } else {
-                alert('Geolocation is not supported by this browser.');
+                statusDiv.innerHTML = 'Geolocation is not supported by this browser.';
+                statusDiv.className = 'form-text mt-2 text-danger';
             }
         }
 
@@ -783,102 +793,103 @@
             const doctorFields = document.getElementById('doctorFields');
             const hospitalFields = document.getElementById('hospitalFields');
 
-            // Hide all fields first and remove show class
             [patientFields, doctorFields, hospitalFields].forEach(field => {
                 field.style.display = 'none';
                 field.classList.remove('show');
             });
 
-            // Clear all field requirements and values
             clearFieldRequirements(patientFields);
             clearFieldRequirements(doctorFields);
             clearFieldRequirements(hospitalFields);
 
-            // Show relevant fields based on selection
             if (roleSelect.value === 'Patient') {
                 patientFields.style.display = 'block';
                 patientFields.classList.add('show');
-                setRequiredFields(patientFields, ['patient_first_name', 'patient_last_name', 'patient_gender', 'patient_dob', 'patient_address', 'patient_latitude', 'patient_longitude']);
+                setRequiredFields(patientFields, ['patient_first_name', 'patient_last_name', 'patient_gender', 'patient_dob', 'patient_address']);
             } else if (roleSelect.value === 'Doctor') {
                 doctorFields.style.display = 'block';
                 doctorFields.classList.add('show');
-                setRequiredFields(doctorFields, ['doctor_first_name', 'doctor_last_name', 'doctor_gender', 'license_number', 'exp_years', 'fee', 'doctor_address', 'doctor_latitude', 'doctor_longitude']);
+                setRequiredFields(doctorFields, ['doctor_first_name', 'doctor_last_name', 'doctor_gender', 'license_number', 'exp_years', 'fee', 'doctor_address']);
             } else if (roleSelect.value === 'Hospital') {
                 hospitalFields.style.display = 'block';
                 hospitalFields.classList.add('show');
-                setRequiredFields(hospitalFields, ['hospital_name', 'hospital_address', 'hospital_latitude', 'hospital_longitude']);
+                setRequiredFields(hospitalFields, ['hospital_name', 'hospital_address']);
             }
         }
 
         function clearFieldRequirements(container) {
             const inputs = container.querySelectorAll('input, select, textarea');
-            inputs.forEach(input => {
-                input.required = false;
-                input.value = '';
-            });
+            inputs.forEach(input => { input.required = false; });
         }
 
         function setRequiredFields(container, requiredNames) {
             requiredNames.forEach(name => {
                 const field = container.querySelector(`[name="${name}"]`);
-                if (field) {
-                    field.required = true;
-                }
+                if (field) { field.required = true; }
             });
         }
 
-        // Form validation before submission
         document.getElementById('signupForm').addEventListener('submit', function(e) {
-            // Email validation
             const emailInput = document.getElementById('emailInput');
-            const email = emailInput.value.trim();
-            if (!email.endsWith('@gmail.com')) {
+            if (emailInput.value && !emailInput.value.endsWith('@gmail.com')) {
                 e.preventDefault();
                 alert('Please enter a valid @gmail.com email address.');
                 return;
             }
 
-            // Password validation
             const passwordInput = document.getElementById('passwordInput');
-            const password = passwordInput.value.trim();
-            if (password.length < 6) {
+            if (passwordInput.value.trim().length < 6) {
                 e.preventDefault();
                 alert('Password must be at least 6 characters long.');
-                return;
-            }
-
-            // Phone number validation
-            const phoneInput = document.getElementById('phoneInput');
-            const phone = phoneInput.value.trim();
-            if (!/^\d{11}$/.test(phone)) {
-                e.preventDefault();
-                alert('Phone number must be exactly 11 digits.');
+                passwordInput.focus();
                 return;
             }
 
             const roleSelect = document.getElementById('roleSelect');
             const role = roleSelect.value;
-            
             if (!role) {
                 e.preventDefault();
                 alert('Please select a role.');
                 return;
             }
 
-            let latField, lonField, addressField;
+            // --- Phone Number Validation ---
+            let phoneInput;
+            if (role === 'Patient') {
+                phoneInput = document.getElementById('patientPrimaryContact');
+            } else if (role === 'Doctor') {
+                phoneInput = document.getElementById('doctorPrimaryContact');
+            } else if (role === 'Hospital') {
+                phoneInput = document.getElementById('hospitalPrimaryContact');
+            }
+
+            if (phoneInput && !phoneInput.value.trim()) {
+                e.preventDefault();
+                alert('Please enter a primary contact number.');
+                phoneInput.focus();
+                return;
+            }
+            // --- End Phone Validation ---
+
+            let latField, lonField, statusDiv, addressField;
             if (role === 'Patient') {
                 latField = document.getElementById('patientLatitude');
                 lonField = document.getElementById('patientLongitude');
+                statusDiv = document.getElementById('patientLocationStatus');
                 addressField = document.getElementById('patientAddress');
             } else if (role === 'Doctor') {
                 latField = document.getElementById('doctorLatitude');
                 lonField = document.getElementById('doctorLongitude');
+                statusDiv = document.getElementById('doctorLocationStatus');
                 addressField = document.getElementById('doctorAddress');
             } else if (role === 'Hospital') {
                 latField = document.getElementById('hospitalLatitude');
                 lonField = document.getElementById('hospitalLongitude');
+                statusDiv = document.getElementById('hospitalLocationStatus');
                 addressField = document.getElementById('hospitalAddress');
             }
+
+            if (statusDiv) statusDiv.innerHTML = ''; // Clear previous location status
 
             if (addressField && !addressField.value.trim()) {
                 e.preventDefault();
@@ -889,26 +900,37 @@
             if (latField && lonField) {
                 if (!latField.value || !lonField.value) {
                     e.preventDefault();
-                    alert('Please input a valid location using Get Location button.');
+                    alert('Please use the Get My Location button to provide a valid location.');
                     return;
                 }
             }
 
-            // Additional validation for specific roles
             if (role === 'Doctor') {
-                const licenseNumber = document.getElementById('licenseNumber').value.trim();
-                const expYears = document.getElementById('expYears').value.trim();
-                const fee = document.getElementById('fee').value.trim();
-                
-                if (!licenseNumber || !expYears || !fee) {
+                const licenseInput = document.getElementById('licenseNumber');
+                const expInput = document.getElementById('expYears');
+                const feeInput = document.getElementById('fee');
+
+                if (licenseInput.value.trim() === '') {
                     e.preventDefault();
-                    alert('Please fill in all required doctor fields (License Number, Experience Years, Fee).');
+                    alert('Please enter your Medical License Number.');
+                    licenseInput.focus();
+                    return;
+                }
+                if (expInput.value.trim() === '') {
+                    e.preventDefault();
+                    alert('Please enter your Years of Experience.');
+                    expInput.focus();
+                    return;
+                }
+                if (feeInput.value.trim() === '') {
+                    e.preventDefault();
+                    alert('Please enter your Consultation Fee.');
+                    feeInput.focus();
                     return;
                 }
             }
         });
 
-        // Call once on page load in case of page refresh
         window.onload = toggleFields;
     </script>
 </body>
