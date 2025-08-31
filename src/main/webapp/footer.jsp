@@ -164,7 +164,7 @@
         </div>
     </div>
     <div class="footer-bottom">
-        <p>© 2024 DocAid. All rights reserved. | Designed by Group H</p>
+        <p>© 2025 DocAid. All rights reserved. | Designed by Mahmudul Hasan</p>
         <p>
             <a href="#">Privacy Policy</a>
             <span class="separator">|</span>
