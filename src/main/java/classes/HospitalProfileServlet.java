@@ -41,7 +41,7 @@ public class HospitalProfileServlet extends HttpServlet {
             }
 
             // Fetch medical tests and add to request
-            java.util.List<classes.Hospital.MedicalTestRecord> medicalTests = hospital.getMedicalTests();
+            java.util.List<classes.Hospital.MedicalTestRecord> medicalTests = hospital.getMedicalTestsActiveOnly();
             request.setAttribute("medicalTests", medicalTests);
             
             request.setAttribute("hospital", hospital);

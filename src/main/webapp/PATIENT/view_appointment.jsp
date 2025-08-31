@@ -720,8 +720,8 @@
             </div>
             <i class="fas fa-calendar-alt header-icon"></i>
             <div class="quick-actions">
-                <a href="book_appointment.jsp" class="quick-action-btn">
-                    <i class="fas fa-plus"></i>
+                <a href="${pageContext.request.contextPath}/search" class="quick-action-btn">
+                    <i class="fas fa-search"></i>
                     Book New Appointment
                 </a>
             </div>
@@ -846,8 +846,8 @@
                                 You haven't scheduled any appointments yet. Start your healthcare journey 
                                 by booking your first appointment with one of our qualified doctors.
                             </p>
-                            <a href="book_appointment.jsp" class="empty-action">
-                                <i class="fas fa-plus"></i>
+                            <a href="${pageContext.request.contextPath}/search" class="empty-action">
+                                <i class="fas fa-search"></i>
                                 Book Your First Appointment
                             </a>
                         </div>

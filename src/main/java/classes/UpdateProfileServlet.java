@@ -103,16 +103,8 @@ public class UpdateProfileServlet extends HttpServlet {
                 pst.executeUpdate();
             }
 
-            // Upsert User_Contact table
-            if (phone != null && !phone.trim().isEmpty()) {
-                try (PreparedStatement pst = con.prepareStatement(
-                    "INSERT INTO User_Contact (user_id, contact_no, contact_type) VALUES (?, ?, 'Primary') " +
-                    "ON DUPLICATE KEY UPDATE contact_no = VALUES(contact_no)")) {
-                    pst.setInt(1, userId);
-                    pst.setString(2, phone);
-                    pst.executeUpdate();
-                }
-            }
+            // Upsert User_Contact table for Primary contact
+            upsertContact(con, userId, phone, "Primary");
 
             con.commit();
             session.setAttribute("updateStatus", "success");
@@ -123,6 +115,26 @@ public class UpdateProfileServlet extends HttpServlet {
             session.setAttribute("updateMessage", "A database error occurred: " + e.getMessage());
         } finally {
             response.sendRedirect(request.getContextPath() + "/patient/profile");
+        }
+    }
+
+    private void upsertContact(Connection conn, int userId, String contactNo, String contactType) throws SQLException {
+        if (contactNo == null || contactNo.trim().isEmpty()) {
+            String sqlDelete = "DELETE FROM User_Contact WHERE user_id = ? AND contact_type = ?";
+            try (PreparedStatement pstmt = conn.prepareStatement(sqlDelete)) {
+                pstmt.setInt(1, userId);
+                pstmt.setString(2, contactType);
+                pstmt.executeUpdate();
+            }
+        } else {
+            String sqlUpsert = "INSERT INTO User_Contact (user_id, contact_no, contact_type) VALUES (?, ?, ?) " +
+                               "ON DUPLICATE KEY UPDATE contact_no = VALUES(contact_no)";
+            try (PreparedStatement pstmt = conn.prepareStatement(sqlUpsert)) {
+                pstmt.setInt(1, userId);
+                pstmt.setString(2, contactNo.trim());
+                pstmt.setString(3, contactType);
+                pstmt.executeUpdate();
+            }
         }
     }
 }

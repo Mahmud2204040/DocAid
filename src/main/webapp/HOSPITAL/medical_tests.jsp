@@ -46,10 +46,10 @@
                             <td>$<c:out value="${String.format('%.2f', test.price)}"/></td>
                             <td>
                                 <c:if test="${test.active}">
-                                    <span class="badge bg-success">Active</span>
+                                    <span class="badge bg-success">Available</span>
                                 </c:if>
                                 <c:if test="${!test.active}">
-                                    <span class="badge bg-secondary">Inactive</span>
+                                    <span class="badge bg-secondary">Unavailable</span>
                                 </c:if>
                             </td>
                             <td>
@@ -58,6 +58,7 @@
                                         data-test-id="${test.testId}"
                                         data-test-name="${test.testName}"
                                         data-test-price="${test.price}"
+                                        data-test-active="${test.active}"
                                         data-test-description="${test.description}">Edit</button>
                                 <button type="button" class="btn btn-sm btn-danger delete-btn"
                                         data-bs-toggle="modal" data-bs-target="#deleteTestModal"
@@ -135,6 +136,11 @@
                         <label for="edit_description" class="form-label">Description</label>
                         <textarea class="form-control" id="edit_description" name="description" rows="3"></textarea>
                     </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="edit_is_active" name="is_active" value="on">
+                        <label class="form-check-label" for="edit_is_active">Available</label>
+                        <div class="form-text">Uncheck this to make the test unavailable for booking.</div>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -180,10 +186,12 @@ document.addEventListener('DOMContentLoaded', function () {
             var testName = button.getAttribute('data-test-name');
             var testPrice = button.getAttribute('data-test-price');
             var testDescription = button.getAttribute('data-test-description');
+            var testActive = button.getAttribute('data-test-active');
             editTestModal.querySelector('#edit_test_id').value = testId;
             editTestModal.querySelector('#edit_test_name').value = testName;
             editTestModal.querySelector('#edit_price').value = testPrice;
             editTestModal.querySelector('#edit_description').value = testDescription;
+            editTestModal.querySelector('#edit_is_active').checked = (testActive === 'true');
         });
     }
 

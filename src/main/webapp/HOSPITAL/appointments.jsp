@@ -1,4 +1,5 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
 
 <%-- Set active page for sidebar --%>
 <c:set var="activePage" value="appointments" scope="request"/>
@@ -23,21 +24,20 @@
                     <table class="table table-bordered table-hover" id="appointmentsTable" width="100%" cellspacing="0">
                         <thead>
                             <tr>
-                                <th>ID</th>
                                 <th>Patient Name</th>
                                 <th>Doctor Name</th>
+                                <th>Specialty</th>
                                 <th>Date & Time</th>
                                 <th>Status</th>
-                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             <c:forEach var="appt" items="${appointmentList}">
                                 <tr>
-                                    <td><c:out value="${appt.appointmentId}"/></td>
                                     <td><c:out value="${appt.patientName}"/></td>
                                     <td><c:out value="${appt.doctorName}"/></td>
-                                    <td><c:out value="${appt.appointmentDateTime}"/></td>
+                                    <td><c:out value="${appt.specialty}"/></td>
+                                    <td><fmt:formatDate value="${appt.appointmentTimestamp}" pattern="dd MMMM yyyy hh:mm a"/></td>
                                     <td>
                                         <c:choose>
                                             <c:when test="${appt.status == 'Completed'}">
@@ -56,9 +56,6 @@
                                                 <span class="badge bg-secondary"><c:out value="${appt.status}"/></span>
                                             </c:otherwise>
                                         </c:choose>
-                                    </td>
-                                    <td>
-                                        <a href="#" class="btn btn-sm btn-info">Details</a>
                                     </td>
                                 </tr>
                             </c:forEach>

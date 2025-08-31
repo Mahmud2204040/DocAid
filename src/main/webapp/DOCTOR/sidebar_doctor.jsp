@@ -1,6 +1,8 @@
 <!-- /WEB-INF/jsp/includes/sidebar_doctor.jsp -->
 <nav class="sidebar">
-    <div class="brand">DocAid</div>
+    <div class="brand">
+        <img src="${pageContext.request.contextPath}/images/logo.png" alt="DocAid Logo" style="height: 60px; margin-right: 15px;">DocAid
+    </div>
     <ul class="nav flex-column">
         <!-- My Profile -->
         <li class="nav-item">
@@ -48,14 +50,6 @@
                href="<%= request.getContextPath() %>/doctor/affiliation">
                 <i class="fas fa-handshake"></i>
                 Affiliation Requests
-            </a>
-        </li>
-        <!-- Notification -->
-        <li class="nav-item">
-            <a class="nav-link <%= "notification".equals(request.getAttribute("activePage")) ? "active" : "" %>"
-               href="<%= request.getContextPath() %>/DOCTOR/notification.jsp">
-                <i class="fas fa-bell"></i>
-                Notification
             </a>
         </li>
         <!-- Sign Out -->

@@ -69,7 +69,7 @@ public class Hospital extends User {
 
     public static class AffiliatedDoctor {
         public int doctorId, reviewCount;
-        public String fullName, specialty;
+        public String fullName, specialty, licenseNumber;
         public double rating;
         public boolean isVerified;
         public int getDoctorId() { return doctorId; }
@@ -78,6 +78,8 @@ public class Hospital extends User {
         public void setFullName(String fullName) { this.fullName = fullName; }
         public String getSpecialty() { return specialty; }
         public void setSpecialty(String specialty) { this.specialty = specialty; }
+        public String getLicenseNumber() { return licenseNumber; }
+        public void setLicenseNumber(String licenseNumber) { this.licenseNumber = licenseNumber; }
         public double getRating() { return rating; }
         public void setRating(double rating) { this.rating = rating; }
         public int getReviewCount() { return reviewCount; }
@@ -120,22 +122,25 @@ public class Hospital extends User {
 
     public static class AppointmentDetail {
         public int appointmentId;
-        public String patientName, doctorName, appointmentDateTime, status;
+        public String patientName, doctorName, specialty, status;
+        private java.util.Date appointmentTimestamp;
         public int getAppointmentId() { return appointmentId; }
         public void setAppointmentId(int appointmentId) { this.appointmentId = appointmentId; }
         public String getPatientName() { return patientName; }
         public void setPatientName(String patientName) { this.patientName = patientName; }
         public String getDoctorName() { return doctorName; }
         public void setDoctorName(String doctorName) { this.doctorName = doctorName; }
-        public String getAppointmentDateTime() { return appointmentDateTime; }
-        public void setAppointmentDateTime(String appointmentDateTime) { this.appointmentDateTime = appointmentDateTime; }
+        public String getSpecialty() { return specialty; }
+        public void setSpecialty(String specialty) { this.specialty = specialty; }
+        public java.util.Date getAppointmentTimestamp() { return appointmentTimestamp; }
+        public void setAppointmentTimestamp(java.util.Date appointmentTimestamp) { this.appointmentTimestamp = appointmentTimestamp; }
         public String getStatus() { return status; }
         public void setStatus(String status) { this.status = status; }
     }
 
     public static class AvailableDoctor {
         private int doctorId;
-        private String fullName, specialty, currentHospitalName;
+        private String fullName, specialty, currentHospitalName, licenseNumber;
         public int getDoctorId() { return doctorId; }
         public void setDoctorId(int id) { this.doctorId = id; }
         public String getFullName() { return fullName; }
@@ -144,6 +149,8 @@ public class Hospital extends User {
         public void setSpecialty(String s) { this.specialty = s; }
         public String getCurrentHospitalName() { return currentHospitalName; }
         public void setCurrentHospitalName(String name) { this.currentHospitalName = name; }
+        public String getLicenseNumber() { return licenseNumber; }
+        public void setLicenseNumber(String licenseNumber) { this.licenseNumber = licenseNumber; }
     }
 
     // Database Methods
@@ -186,7 +193,7 @@ public class Hospital extends User {
 
     public List<AffiliatedDoctor> getAffiliatedDoctors() throws SQLException {
         List<AffiliatedDoctor> doctors = new ArrayList<>();
-        try (Connection conn = DbConnector.getConnection(); PreparedStatement pstmt = conn.prepareStatement("SELECT doctor_id, display_name, specialty, rating, review_count, is_verified FROM v_doctor_search WHERE hospital_id = ? ORDER BY last_name, first_name")) {
+        try (Connection conn = DbConnector.getConnection(); PreparedStatement pstmt = conn.prepareStatement("SELECT doctor_id, display_name, specialty, rating, review_count, license_number FROM v_doctor_search WHERE hospital_id = ? ORDER BY last_name, first_name")) {
             pstmt.setInt(1, this.hospitalId);
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
@@ -196,7 +203,7 @@ public class Hospital extends User {
                     doc.setSpecialty(rs.getString("specialty"));
                     doc.setRating(rs.getDouble("rating"));
                     doc.setReviewCount(rs.getInt("review_count"));
-                    doc.setVerified(rs.getBoolean("is_verified"));
+                    doc.setLicenseNumber(rs.getString("license_number"));
                     doctors.add(doc);
                 }
             }
@@ -223,9 +230,28 @@ public class Hospital extends User {
         return tests;
     }
 
+    public List<MedicalTestRecord> getMedicalTestsActiveOnly() throws SQLException {
+        List<MedicalTestRecord> tests = new ArrayList<>();
+        try (Connection conn = DbConnector.getConnection(); PreparedStatement pstmt = conn.prepareStatement("SELECT test_id, test_name, description, price, is_active FROM Medical_test WHERE hospital_id = ? AND is_active = TRUE ORDER BY test_name")) {
+            pstmt.setInt(1, this.hospitalId);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    MedicalTestRecord test = new MedicalTestRecord();
+                    test.setTestId(rs.getInt("test_id"));
+                    test.setTestName(rs.getString("test_name"));
+                    test.setDescription(rs.getString("description"));
+                    test.setPrice(rs.getDouble("price"));
+                    test.setActive(rs.getBoolean("is_active"));
+                    tests.add(test);
+                }
+            }
+        }
+        return tests;
+    }
+
     public List<AppointmentDetail> getAppointments() throws SQLException {
         List<AppointmentDetail> appointments = new ArrayList<>();
-        try (Connection conn = DbConnector.getConnection(); PreparedStatement pstmt = conn.prepareStatement("SELECT appointment_id, patient_name, doctor_name, appointment_date, appointment_time, appointment_status FROM v_appointment_details WHERE hospital_id = ? ORDER BY appointment_date DESC, appointment_time DESC")) {
+        try (Connection conn = DbConnector.getConnection(); PreparedStatement pstmt = conn.prepareStatement("SELECT appointment_id, patient_name, doctor_name, specialty_name, appointment_date, appointment_time, appointment_status FROM v_appointment_details WHERE hospital_id = ? ORDER BY appointment_date DESC, appointment_time DESC")) {
             pstmt.setInt(1, this.hospitalId);
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
@@ -233,7 +259,15 @@ public class Hospital extends User {
                     appt.setAppointmentId(rs.getInt("appointment_id"));
                     appt.setPatientName(rs.getString("patient_name"));
                     appt.setDoctorName(rs.getString("doctor_name"));
-                    appt.setAppointmentDateTime(rs.getDate("appointment_date").toString() + " " + rs.getTime("appointment_time").toString());
+                    appt.setSpecialty(rs.getString("specialty_name"));
+                    
+                    java.sql.Date date = rs.getDate("appointment_date");
+                    java.sql.Time time = rs.getTime("appointment_time");
+                    if (date != null && time != null) {
+                        java.sql.Timestamp timestamp = java.sql.Timestamp.valueOf(date.toLocalDate().atTime(time.toLocalTime()));
+                        appt.setAppointmentTimestamp(timestamp);
+                    }
+                    
                     appt.setStatus(rs.getString("appointment_status"));
                     appointments.add(appt);
                 }
@@ -298,13 +332,14 @@ public class Hospital extends User {
         }
     }
 
-    public boolean updateMedicalTest(int testId, String testName, String description, double price) throws SQLException {
-        try (Connection conn = DbConnector.getConnection(); PreparedStatement pstmt = conn.prepareStatement("UPDATE Medical_test SET test_name = ?, price = ?, description = ? WHERE test_id = ? AND hospital_id = ?")) {
+    public boolean updateMedicalTest(int testId, String testName, String description, double price, boolean isActive) throws SQLException {
+        try (Connection conn = DbConnector.getConnection(); PreparedStatement pstmt = conn.prepareStatement("UPDATE Medical_test SET test_name = ?, price = ?, description = ?, is_active = ? WHERE test_id = ? AND hospital_id = ?")) {
             pstmt.setString(1, testName);
             pstmt.setDouble(2, price);
             pstmt.setString(3, description);
-            pstmt.setInt(4, testId);
-            pstmt.setInt(5, this.hospitalId);
+            pstmt.setBoolean(4, isActive);
+            pstmt.setInt(5, testId);
+            pstmt.setInt(6, this.hospitalId);
             return pstmt.executeUpdate() > 0;
         }
     }
@@ -319,7 +354,7 @@ public class Hospital extends User {
 
     public List<AvailableDoctor> searchAvailableDoctors(String searchTerm) throws SQLException {
         List<AvailableDoctor> doctors = new ArrayList<>();
-        String sql = "SELECT doctor_id, display_name, specialty, hospital_name FROM v_doctor_search WHERE (hospital_id IS NULL OR hospital_id != ?) AND display_name LIKE ?";
+        String sql = "SELECT doctor_id, display_name, specialty, hospital_name, license_number FROM v_doctor_search WHERE (hospital_id IS NULL OR hospital_id != ?) AND display_name LIKE ?";
         try (Connection conn = DbConnector.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, this.hospitalId);
             pstmt.setString(2, "%" + searchTerm + "%");
@@ -330,6 +365,7 @@ public class Hospital extends User {
                     doc.setFullName(rs.getString("display_name"));
                     doc.setSpecialty(rs.getString("specialty"));
                     doc.setCurrentHospitalName(rs.getString("hospital_name"));
+                    doc.setLicenseNumber(rs.getString("license_number"));
                     doctors.add(doc);
                 }
             }

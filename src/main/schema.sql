@@ -206,7 +206,6 @@ CREATE TABLE Doctor_schedule (
     visiting_day ENUM('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday') NOT NULL,
     start_time TIME NOT NULL,
     end_time TIME NOT NULL,
-    is_available BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (doctor_id) REFERENCES Doctor(doctor_id) ON DELETE CASCADE,
@@ -590,8 +589,7 @@ BEGIN
     FROM Doctor_schedule ds
     WHERE ds.doctor_id = p_doctor_id
     AND ds.visiting_day = v_day_name
-    AND p_time BETWEEN ds.start_time AND ds.end_time
-    AND ds.is_available = TRUE;
+    AND p_time BETWEEN ds.start_time AND ds.end_time;
     
     IF v_count = 0 THEN
         SELECT 1 AS status_code, 'UNAVAILABLE' AS status, 'Doctor is not scheduled to work at the requested time.' AS message;

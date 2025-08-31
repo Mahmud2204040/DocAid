@@ -65,7 +65,7 @@
                             <td><span class="badge bg-secondary">${user.userType}</span></td>
                             <td>${user.createdAt}</td>
                             <td>
-                                <button class="btn btn-sm btn-outline-primary"><i class="fas fa-edit"></i> Edit</button>
+                                
                                 <button class="btn btn-sm btn-outline-danger delete-user-btn"
                                         data-bs-toggle="modal"
                                         data-bs-target="#deleteUserModal"

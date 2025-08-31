@@ -8,6 +8,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 
@@ -23,7 +26,7 @@ public class ActivityMonitorServlet extends HttpServlet {
         }
 
         try {
-            List<Admin.ActiveMonitor> monitorList = new Admin(1,1,"dummy").getActiveMonitors();
+            List<Admin.ActiveMonitor> monitorList = Admin.getActiveMonitors();
             request.setAttribute("monitorList", monitorList);
             RequestDispatcher dispatcher = request.getRequestDispatcher("/ADMIN/monitoring.jsp");
             dispatcher.forward(request, response);
@@ -32,7 +35,7 @@ public class ActivityMonitorServlet extends HttpServlet {
         }
     }
 
-    @Override
+        @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         HttpSession session = request.getSession(false);
         if (!isAdmin(session)) {
@@ -40,22 +43,64 @@ public class ActivityMonitorServlet extends HttpServlet {
             return;
         }
         
-        // This is a placeholder. In a real app, you'd get the admin_id associated with the user_id
-        int adminId = 1; 
-
+        Integer userId = (Integer) session.getAttribute("user_id");
         String action = request.getParameter("action");
+        boolean success = false;
+        String message = "";
 
-        try {
+        try (Connection conn = DbConnector.getConnection()) {
+            // Get the admin_id from the user_id
+            int adminId = -1;
+            try (PreparedStatement pstmt = conn.prepareStatement("SELECT admin_id FROM Admin WHERE user_id = ?")) {
+                pstmt.setInt(1, userId);
+                try (ResultSet rs = pstmt.executeQuery()) {
+                    if (rs.next()) {
+                        adminId = rs.getInt("admin_id");
+                    }
+                }
+            }
+
+            if (adminId == -1) {
+                throw new ServletException("Admin ID not found for the logged-in user.");
+            }
+
+            Admin admin = new Admin(adminId, userId, (String) session.getAttribute("email")); // Use fetched adminId
+
             if ("start".equals(action)) {
-                int userId = Integer.parseInt(request.getParameter("userId"));
+                int monitoredUserId = Integer.parseInt(request.getParameter("userId"));
                 String reason = request.getParameter("reason");
-                new Admin(adminId,1,"dummy").startMonitoring(userId, reason);
+
+                // Check if the user to be monitored exists
+                if (!Admin.userExists(monitoredUserId)) {
+                    session.setAttribute("message", "Error: User ID " + monitoredUserId + " does not exist.");
+                    session.setAttribute("messageClass", "alert-danger");
+                    response.sendRedirect(request.getContextPath() + "/admin/monitoring");
+                    return;
+                }
+
+                success = admin.startMonitoring(monitoredUserId, reason);
+                message = success ? "Monitoring session started successfully." : "Failed to start monitoring session.";
             } else if ("stop".equals(action)) {
                 int monitorId = Integer.parseInt(request.getParameter("monitorId"));
-                new Admin(adminId,1,"dummy").stopMonitoring(monitorId);
+                success = admin.stopMonitoring(monitorId);
+                message = success ? "Monitoring session stopped successfully." : "Failed to stop monitoring session.";
             }
-        } catch (Exception e) {
-            // handle error
+            
+            session.setAttribute("message", message);
+            session.setAttribute("messageClass", success ? "alert-success" : "alert-danger");
+
+        } catch (NumberFormatException e) {
+            session.setAttribute("message", "Invalid User ID or Monitor ID format.");
+            session.setAttribute("messageClass", "alert-danger");
+            e.printStackTrace();
+        } catch (SQLException e) {
+            session.setAttribute("message", "Database Error: " + e.getMessage());
+            session.setAttribute("messageClass", "alert-danger");
+            e.printStackTrace();
+        } catch (Exception e) { // Catch any other unexpected exceptions
+            session.setAttribute("message", "An unexpected error occurred: " + e.getMessage());
+            session.setAttribute("messageClass", "alert-danger");
+            e.printStackTrace();
         }
 
         response.sendRedirect(request.getContextPath() + "/admin/monitoring");

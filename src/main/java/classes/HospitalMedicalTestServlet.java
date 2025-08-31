@@ -79,7 +79,8 @@ public class HospitalMedicalTestServlet extends HttpServlet {
                 if (testIdStr != null && !testIdStr.isEmpty()) {
                     // This is an update (edit)
                     int testId = Integer.parseInt(testIdStr);
-                    success = hospital.updateMedicalTest(testId, testName, description, price);
+                    boolean isActive = "on".equals(request.getParameter("is_active"));
+                    success = hospital.updateMedicalTest(testId, testName, description, price, isActive);
                     message = success ? "Medical test updated successfully!" : "Failed to update medical test.";
                 } else {
                     // This is a create (add)

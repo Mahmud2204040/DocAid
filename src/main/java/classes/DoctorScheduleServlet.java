@@ -88,7 +88,7 @@ public class DoctorScheduleServlet extends HttpServlet {
         try (Connection conn = DbConnector.getConnection()) {
             int doctorId = getDoctorId(conn, userId);
             if (doctorId != -1) {
-                String sql = "INSERT INTO Doctor_schedule (doctor_id, visiting_day, start_time, end_time, is_available) VALUES (?, ?, ?, ?, TRUE)";
+                String sql = "INSERT INTO Doctor_schedule (doctor_id, visiting_day, start_time, end_time) VALUES (?, ?, ?, ?)";
                 try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
                     pstmt.setInt(1, doctorId);
                     pstmt.setString(2, day);

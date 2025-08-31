@@ -35,7 +35,7 @@
                         <th>Specialty</th>
                         <th>Rating</th>
                         <th>Reviews</th>
-                        <th>Status</th>
+                        <th>License Number</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -48,16 +48,9 @@
                                 <span class="badge bg-primary"><i class="fas fa-star"></i> <c:out value="${String.format('%.2f', doc.rating)}"/></span>
                             </td>
                             <td><c:out value="${doc.reviewCount}"/></td>
+                            <td><c:out value="${doc.licenseNumber}"/></td>
                             <td>
-                                <c:if test="${doc.verified}">
-                                    <span class="badge bg-success"><i class="fas fa-check-circle"></i> Verified</span>
-                                </c:if>
-                                <c:if test="${!doc.verified}">
-                                    <span class="badge bg-warning text-dark"><i class="fas fa-exclamation-triangle"></i> Unverified</span>
-                                </c:if>
-                            </td>
-                            <td>
-                                <a href="#" class="btn btn-sm btn-info">View Profile</a>
+                                <a href="${pageContext.request.contextPath}/hospital/doctor-profile?doctor_id=${doc.doctorId}" class="btn btn-sm btn-info">View Profile</a>
                             </td>
                         </tr>
                     </c:forEach>

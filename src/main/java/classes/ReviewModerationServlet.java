@@ -8,6 +8,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 
@@ -40,23 +43,51 @@ public class ReviewModerationServlet extends HttpServlet {
             return;
         }
 
-        // We need the admin's ID for logging the approval
-        // This requires a query, or it should be stored in the session upon login.
-        // For now, we will omit fetching the specific admin_id for simplicity.
-        int adminId = 1; // Placeholder adminId
-
+        Integer userId = (Integer) session.getAttribute("user_id");
         String action = request.getParameter("action");
         int reviewId = Integer.parseInt(request.getParameter("reviewId"));
+        boolean success = false;
+        String message = "";
 
-        try {
-            if ("approve".equals(action)) {
-                new Admin(adminId,1,"dummy").approveReview(reviewId);
-            } else if ("delete".equals(action)) {
-                new Admin(adminId,1,"dummy").deleteReview(reviewId);
+        try (Connection conn = DbConnector.getConnection()) {
+            // First, get the admin_id from the user_id
+            int adminId = -1;
+            try (PreparedStatement pstmt = conn.prepareStatement("SELECT admin_id FROM Admin WHERE user_id = ?")) {
+                pstmt.setInt(1, userId);
+                try (ResultSet rs = pstmt.executeQuery()) {
+                    if (rs.next()) {
+                        adminId = rs.getInt("admin_id");
+                    }
+                }
             }
+
+            if (adminId == -1) {
+                throw new ServletException("Admin ID not found for the logged-in user.");
+            }
+
+            Admin admin = new Admin(adminId, userId, (String) session.getAttribute("email"));
+
+            if ("approve".equals(action)) {
+                success = admin.approveReview(reviewId);
+                message = success ? "Review approved successfully." : "Failed to approve review.";
+            } else if ("delete".equals(action)) {
+                success = admin.deleteReview(reviewId);
+                message = success ? "Review deleted successfully." : "Failed to delete review.";
+            }
+            
+            session.setAttribute("message", message);
+            session.setAttribute("messageClass", success ? "alert-success" : "alert-danger");
+
         } catch (SQLException e) {
-            // handle exception
+            session.setAttribute("message", "Database Error: " + e.getMessage());
+            session.setAttribute("messageClass", "alert-danger");
+            e.printStackTrace();
+        } catch (Exception e) {
+            session.setAttribute("message", "An unexpected error occurred: " + e.getMessage());
+            session.setAttribute("messageClass", "alert-danger");
+            e.printStackTrace();
         }
+
         response.sendRedirect(request.getContextPath() + "/admin/reviews");
     }
 

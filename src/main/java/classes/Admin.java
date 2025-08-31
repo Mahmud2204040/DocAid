@@ -120,6 +120,25 @@ public class Admin extends User {
         return analytics;
     }
 
+    public List<UserDetails> getRecentActivity() throws SQLException {
+        List<UserDetails> recentUsers = new ArrayList<>();
+        String sql = "SELECT user_id, email, user_type, full_name, created_at FROM v_user_complete_info ORDER BY created_at DESC LIMIT 5";
+        try (Connection conn = DbConnector.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql);
+             ResultSet rs = pstmt.executeQuery()) {
+            while (rs.next()) {
+                UserDetails user = new UserDetails();
+                user.setUserId(rs.getInt("user_id"));
+                user.setEmail(rs.getString("email"));
+                user.setUserType(rs.getString("user_type"));
+                user.setFullName(rs.getString("full_name"));
+                user.setCreatedAt(rs.getTimestamp("created_at").toString());
+                recentUsers.add(user);
+            }
+        }
+        return recentUsers;
+    }
+
     public List<UserDetails> getAllUsers(String userTypeFilter) throws SQLException {
         List<UserDetails> users = new ArrayList<>();
         String sql = "SELECT user_id, email, user_type, full_name, created_at FROM v_user_complete_info";
@@ -185,7 +204,18 @@ public class Admin extends User {
         }
     }
 
-    public List<ActiveMonitor> getActiveMonitors() throws SQLException {
+    public static boolean userExists(int userId) throws SQLException {
+        String sql = "SELECT 1 FROM Users WHERE user_id = ?";
+        try (Connection conn = DbConnector.getConnection();
+            PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, userId);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                return rs.next();
+            }
+        }
+    }
+
+    public static List<ActiveMonitor> getActiveMonitors() throws SQLException {
         List<ActiveMonitor> monitors = new ArrayList<>();
         String sql = "SELECT m.monitor_id, CONCAT(a.first_name, ' ', a.last_name) as admin_name, " +
                      "u.email as monitored_user_email, m.monitoring_reason, m.monitoring_start_date " +

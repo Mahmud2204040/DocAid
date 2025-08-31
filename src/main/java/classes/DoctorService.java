@@ -13,7 +13,7 @@ public class DoctorService {
 
     public static List<Map<String, Object>> getDoctorSchedule(Connection con, int doctorId) throws SQLException {
         List<Map<String, Object>> schedule = new ArrayList<>();
-        String sql = "SELECT * FROM Doctor_schedule WHERE doctor_id = ? AND is_available = TRUE ORDER BY FIELD(visiting_day, 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday')";
+        String sql = "SELECT * FROM Doctor_schedule WHERE doctor_id = ? ORDER BY FIELD(visiting_day, 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday')";
         try (PreparedStatement pst = con.prepareStatement(sql)) {
             pst.setInt(1, doctorId);
             try (ResultSet rs = pst.executeQuery()) {

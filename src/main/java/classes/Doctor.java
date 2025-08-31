@@ -256,7 +256,8 @@ public class Doctor extends User {
             contactType = "Appointment";
         } else if ("Hospital".equals(viewerRole)) {
             contactType = "Primary";
-        } else {
+        }
+        else {
             // Default for other roles or if viewerRole is null
             contactType = "Primary"; 
         }

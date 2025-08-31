@@ -9,6 +9,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.List;
 
 @WebServlet("/admin/dashboard")
 public class AdminDashboardServlet extends HttpServlet {
@@ -30,8 +31,15 @@ public class AdminDashboardServlet extends HttpServlet {
 
         try {
             Admin admin = new Admin(1, (Integer) session.getAttribute("user_id"), (String) session.getAttribute("email"));
+            
+            // Fetch dashboard analytics
             Admin.DashboardAnalytics analytics = admin.getDashboardAnalytics();
             request.setAttribute("analytics", analytics);
+
+            // Fetch recent activity
+            List<Admin.UserDetails> recentActivityList = admin.getRecentActivity();
+            request.setAttribute("recentActivityList", recentActivityList);
+
             RequestDispatcher dispatcher = request.getRequestDispatcher("/ADMIN/index.jsp");
             dispatcher.forward(request, response);
         } catch (SQLException e) {

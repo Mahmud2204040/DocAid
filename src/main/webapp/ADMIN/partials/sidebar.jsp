@@ -1,7 +1,10 @@
 <!-- Admin Sidebar -->
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <div class="bg-dark border-right" id="sidebar-wrapper">
-    <div class="sidebar-heading text-light">DocAid Admin</div>
+    <div class="sidebar-heading text-light" style="display: flex; align-items: center;">
+        <img src="${pageContext.request.contextPath}/images/logo.png" alt="DocAid Logo" style="height: 32px; width: 32px; margin-right: 10px;">
+        <span>DocAid Admin</span>
+    </div>
     <div class="list-group list-group-flush">
         <a href="${pageContext.request.contextPath}/admin/dashboard" class="list-group-item list-group-item-action bg-dark text-light">
             <i class="fas fa-tachometer-alt me-2"></i>Dashboard
@@ -20,6 +23,9 @@
         </a>
         <a href="${pageContext.request.contextPath}/admin/reports" class="list-group-item list-group-item-action bg-dark text-light">
             <i class="fas fa-chart-line me-2"></i>Reports
+        </a>
+        <a href="${pageContext.request.contextPath}/sign_out.jsp" class="list-group-item list-group-item-action bg-dark text-light">
+            <i class="fas fa-sign-out-alt me-2"></i>Logout
         </a>
     </div>
 </div>
