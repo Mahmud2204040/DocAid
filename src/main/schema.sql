@@ -76,12 +76,12 @@ create table Doctor (
 
 -- 7. USER CONTACT table (merged)
 create table User_Contact (
-    contact_id int primary key auto_increment,
     user_id int not null,
     contact_no varchar(20) not null,
     contact_type enum('Primary', 'Emergency', 'Appointment') not null,
     foreign key (user_id) references Users(user_id) on delete cascade,
-    unique key unique_user_contact (user_id, contact_type)
+    primary key (user_id, contact_no),
+    unique key unique_user_contact_type (user_id, contact_type)
 );
 
 -- 8. APPOINTMENT table
