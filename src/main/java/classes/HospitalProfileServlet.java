@@ -1,84 +1,56 @@
+
 package classes;
 
-import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
+import java.sql.Connection;
 import java.sql.SQLException;
 
-@WebServlet("/hospital/profile")
+@WebServlet("/patient/hospital_profile")
 public class HospitalProfileServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
-    @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        HttpSession session = request.getSession(false);
-        if (session == null || session.getAttribute("user_id") == null || !"Hospital".equals(session.getAttribute("user_role"))) {
-            response.sendRedirect(request.getContextPath() + "/login.jsp");
+        String hospitalIdStr = request.getParameter("hospital_id");
+        if (hospitalIdStr == null || hospitalIdStr.isEmpty()) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Hospital ID is required.");
             return;
         }
 
-        Object hospitalIdAttr = session.getAttribute("hospital_id");
-        if (hospitalIdAttr == null) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "User session is missing 'hospital_id'.");
-            return;
-        }
+        // Get user role from session
+        jakarta.servlet.http.HttpSession session = request.getSession(false);
+        String viewerRole = (session != null) ? (String) session.getAttribute("user_type") : null;
 
-        try {
-            int hospitalId = (Integer) hospitalIdAttr;
-            Hospital hospital = new Hospital();
-            hospital.setHospitalId(hospitalId);
-            hospital.loadDetails(); // Fetch details from DB
-
-            request.setAttribute("hospital", hospital);
-            RequestDispatcher dispatcher = request.getRequestDispatcher("/HOSPITAL/update_profile.jsp");
-            dispatcher.forward(request, response);
-
-        } catch (SQLException e) {
-            throw new ServletException("Database error while fetching hospital profile.", e);
-        }
-    }
-
-    @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        HttpSession session = request.getSession(false);
-        if (session == null || session.getAttribute("user_id") == null || !"Hospital".equals(session.getAttribute("user_role"))) {
-            response.sendRedirect(request.getContextPath() + "/login.jsp");
-            return;
-        }
-
-        Object hospitalIdAttr = session.getAttribute("hospital_id");
-        if (hospitalIdAttr == null) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "User session is missing 'hospital_id'.");
-            return;
-        }
-
-        try {
-            int hospitalId = (Integer) hospitalIdAttr;
-            Hospital hospital = new Hospital();
-            hospital.setHospitalId(hospitalId);
+        try (Connection con = DbConnector.getConnection()) {
+            int hospitalId = Integer.parseInt(hospitalIdStr);
             
-            // Populate hospital object from form parameters
-            hospital.setHospitalName(request.getParameter("hospital_name"));
-            hospital.setHospitalBio(request.getParameter("hospital_bio"));
-            hospital.setAddress(request.getParameter("address"));
-            hospital.setWebsite(request.getParameter("website"));
+            Hospital hospital = Hospital.getHospitalById(con, hospitalId);
 
-            if (hospital.updateDetails()) {
-                session.setAttribute("message", "Profile updated successfully!");
-                session.setAttribute("messageClass", "alert-success");
-            } else {
-                session.setAttribute("message", "Failed to update profile.");
-                session.setAttribute("messageClass", "alert-danger");
+            if (hospital == null) {
+                response.sendError(HttpServletResponse.SC_NOT_FOUND, "Hospital not found.");
+                return;
             }
-            response.sendRedirect(request.getContextPath() + "/hospital/profile");
 
+            // If the viewer is a Doctor, hide the emergency contact
+            if ("Doctor".equals(viewerRole)) {
+                hospital.setEmergencyContact(null);
+            }
+
+            // Fetch medical tests and add to request
+            java.util.List<classes.Hospital.MedicalTestRecord> medicalTests = hospital.getMedicalTests();
+            request.setAttribute("medicalTests", medicalTests);
+            
+            request.setAttribute("hospital", hospital);
+            request.getRequestDispatcher("/PATIENT/hospital_profile.jsp").forward(request, response);
+
+        } catch (NumberFormatException e) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid Hospital ID format.");
         } catch (SQLException e) {
-            throw new ServletException("Database error while updating hospital profile.", e);
+            throw new ServletException("Database error while fetching hospital details.", e);
         }
     }
 }

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Configure PUBLIC "-//Jetty//Configure//EN" "http://www.eclipse.org/jetty/configure_9_3.dtd">
+<Configure class="org.eclipse.jetty.webapp.WebAppContext">
+    <New id="docaidDS" class="org.eclipse.jetty.plus.jndi.Resource">
+        <Arg><Ref id="wac"/></Arg>
+        <Arg>jdbc/docaid</Arg>
+        <Arg>
+            <New class="com.mysql.cj.jdbc.MysqlDataSource">
+                <Set name="url">jdbc:mysql://localhost:3306/health_care_system?useSSL=false&amp;allowPublicKeyRetrieval=true&amp;serverTimezone=UTC</Set>
+                <Set name="user">root</Set>
+                <Set name="password">Mahmud2204040</Set>
+            </New>
+        </Arg>
+    </New>
+</Configure>

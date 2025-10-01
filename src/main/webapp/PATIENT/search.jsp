@@ -1,5 +1,7 @@
+
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -9,6 +11,8 @@
     <title>Search Doctors - DocAid</title>
     <!-- Local CSS -->
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/search_page.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/doctor_card.css">
     
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -91,7 +95,7 @@
             position: relative;
             height: 70vh;
             min-height: 500px;
-            background: url('../images/search_hero_section.png') center/cover no-repeat !important;
+            background: url('${pageContext.request.contextPath}/images/search_hero_section.png') center/cover no-repeat !important;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -288,7 +292,7 @@
             align-items: center;
             gap: 0.5rem;
             color: var(--text-secondary);
-            font-size: 0.9375rem;
+            font-size: 1rem;
             margin-bottom: 1rem;
         }
         
@@ -296,7 +300,7 @@
             display: flex;
             align-items: center;
             gap: 0.5rem;
-            margin-bottom: 1.5rem;
+            margin-bottom: 0.2rem;
         }
         
         .rating-stars {
@@ -318,7 +322,7 @@
             display: flex;
             gap: 0.75rem;
             flex-wrap: wrap;
-            margin-bottom: 1.5rem;
+            margin-bottom: 0rem;
         }
         
         .badge-modern {
@@ -603,7 +607,7 @@
                         <div class="search-input-group">
                             <input type="text" name="q" class="search-input"
                                    placeholder="Search for doctors, specialties, or location..."
-                                   aria-label="Search doctors and location" required>
+                                   aria-label="Search doctors and location" required value="<c:out value='${param.q}'/>">
                             <button class="search-btn" type="submit" aria-label="Search">
                                 <i class="bi bi-search" style="margin-right: 0.5rem;"></i> Find Care
                             </button>
@@ -612,10 +616,158 @@
                 </div>
             </div>
         </section>
+
+        <c:if test="${not empty searchResult}">
+            <form action="${pageContext.request.contextPath}/search" method="get" id="filterForm">
+                <input type="hidden" name="q" value="<c:out value='${searchQuery}'/>"/>
+                <input type="hidden" id="userLat" name="userLat" value="<c:out value='${param.userLat}'/>"/>
+                <input type="hidden" id="userLng" name="userLng" value="<c:out value='${param.userLng}'/>"/>
+
+                <div class="filter-bar">
+                    <div class="container">
+                        <div class="row align-items-center">
+                            <div class="col-lg-4 col-md-12 mb-3 mb-lg-0">
+                                <span class="results-count">
+                                    <span class="count-number">${searchResult.totalResults}</span> doctors found
+                                </span>
+                            </div>
+                            <div class="col-lg-8 col-md-12">
+                                <div class="filter-actions justify-content-lg-end">
+                                    <div class="form-check form-switch me-3">
+                                        <input class="form-check-input" type="checkbox" role="switch" id="filterAvailability" name="filterAvailability" value="today" ${'today' eq param.filterAvailability ? 'checked' : ''}>
+                                        <label class="form-check-label" for="filterAvailability">Available Today?</label>
+                                    </div>
+                                    <div class="input-group me-3" style="width: auto;">
+                                        <label class="input-group-text" for="filterRating"><i class="bi bi-star-half"></i></label>
+                                        <select class="form-select" id="filterRating" name="filterRating">
+                                            <option value="0" ${empty param.filterRating or param.filterRating == '0' ? 'selected' : ''}>Any Rating</option>
+                                            <option value="4" ${param.filterRating == '4' ? 'selected' : ''}>4 Stars & Up</option>
+                                            <option value="3" ${param.filterRating == '3' ? 'selected' : ''}>3 Stars & Up</option>
+                                        </select>
+                                    </div>
+                                    <div class="input-group" style="width: auto;">
+                                        <label class="input-group-text" for="sortBy"><i class="bi bi-sort-down"></i></label>
+                                        <select class="form-select" name="sortBy" id="sortBy">
+                                            <option value="default" ${empty param.sortBy or param.sortBy == 'default' ? 'selected' : ''}>Relevance</option>
+                                            <option value="rating" ${param.sortBy == 'rating' ? 'selected' : ''}>Rating</option>
+                                            <option value="name" ${param.sortBy == 'name' ? 'selected' : ''}>Name</option>
+                                            <option value="distance" ${param.sortBy == 'distance' ? 'selected' : ''}>Distance</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="container mt-4">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <c:if test="${empty searchResult.doctors}">
+                                <div class="empty-state">
+                                    <div class="empty-state-icon"><i class="bi bi-search"></i></div>
+                                    <h4>No Doctors Found</h4>
+                                    <p>Try adjusting your search query or filters.</p>
+                                </div>
+                            </c:if>
+
+                            <c:forEach var="doctor" items="${searchResult.doctors}">
+                                <div class="mb-4">
+                                    <%@ include file="_doctor_card.jsp" %>
+                                </div>
+                            </c:forEach>
+            
+                            <c:if test="${searchResult.totalPages > 1}">
+                                <nav aria-label="Page navigation">
+                                    <ul class="pagination justify-content-center">
+                                        <li class="page-item ${searchResult.currentPage == 1 ? 'disabled' : ''}">
+                                            <a class="page-link" href="#" onclick="changePage(${searchResult.currentPage - 1}); return false;">&laquo;</a>
+                                        </li>
+                                        <c:forEach begin="1" end="${searchResult.totalPages}" var="i">
+                                            <li class="page-item ${searchResult.currentPage == i ? 'active' : ''}">
+                                                <a class="page-link" href="#" onclick="changePage(${i}); return false;">${i}</a>
+                                            </li>
+                                        </c:forEach>
+                                        <li class="page-item ${searchResult.currentPage == searchResult.totalPages ? 'disabled' : ''}">
+                                            <a class="page-link" href="#" onclick="changePage(${searchResult.currentPage + 1}); return false;">&raquo;</a>
+                                        </li>
+                                    </ul>
+                                </nav>
+                                <input type="hidden" name="page" id="page" value="${searchResult.currentPage}">
+                            </c:if>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="blog-section">
+                                <h4 class="mb-4" style="font-weight: 700; color: var(--text-primary);">From Our Blog</h4>
+                                <div class="card mb-4 shadow-sm">
+                                    <img src="https://www.mayoclinichealthsystem.org/-/media/national-files/images/hometown-health/2022/looking-at-screen-cranberry-sweater.jpg?sc_lang=en&hash=537EDAC1CC98E19CC45F858D7C0F3FCB" class="card-img-top" alt="Blog Image">
+                                    <div class="card-body">
+                                        <h5 class="card-title" style="font-weight: 600;">A Guide to Medical Specialities</h5>
+                                        <p class="card-text text-muted">Choosing a medical specialty is a big decision. This guide will help you understand the different options...</p>
+                                        <a href="https://www.oxfordscholastica.com/blog/medicine-articles/a-guide-to-medical-specialities/" target="_blank" class="btn btn-primary mt-2">Read More <i class="bi bi-arrow-right"></i></a>
+                                    </div>
+                                </div>
+                                <div class="card mb-4 shadow-sm">
+                                    <img src="https://plus.unsplash.com/premium_photo-1658506671316-0b293df7c72b?fm=jpg&q=60&w=3000&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8ZG9jdG9yfGVufDB8fDB8fHww" class="card-img-top" alt="Blog Image">
+                                    <div class="card-body">
+                                        <h5 class="card-title" style="font-weight: 600;">Primary Care vs. Specialist: What's the Difference?</h5>
+                                        <p class="card-text text-muted">Understand the difference between a primary care physician and a specialist, and when you should see each...</p>
+                                        <a href="https://www.san.health/blog/primary-care-vs-specialist-whats-the-difference-and-why-it-matters" target="_blank" class="btn btn-primary mt-2">Read More <i class="bi bi-arrow-right"></i></a>
+                                    </div>
+                                </div>
+                                <div class="card shadow-sm">
+                                    <img src="https://blog.practo.com/wp-content/uploads/2023/04/wa-webinar-5-13-1220x600.png" class="card-img-top" alt="Blog Image">
+                                    <div class="card-body">
+                                        <h5 class="card-title" style="font-weight: 600;">How to Choose Your Doctor</h5>
+                                        <p class="card-text text-muted">Choosing a doctor is a big decision. Here are some tips to help you choose the right doctor for you...</p>
+                                        <a href="https://blog.practo.com/how-to-choose-your-doctor-listicle-medical-team-practo/" target="_blank" class="btn btn-primary mt-2">Read More <i class="bi bi-arrow-right"></i></a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </c:if>
     </main>
 
     <!-- Local JS -->
     <script src="${pageContext.request.contextPath}/assets/js/jquery.min.js"></script>
     <script src="${pageContext.request.contextPath}/assets/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Run on page load
+        document.addEventListener("DOMContentLoaded", function() {
+            // Get user location if not already set
+            const latInput = document.getElementById('userLat');
+            if (!latInput.value && navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    latInput.value = position.coords.latitude;
+                    document.getElementById('userLng').value = position.coords.longitude;
+                }, function() {
+                    // Handle error or denial
+                    console.log("Geolocation permission denied or failed.");
+                });
+            }
+
+            // Add event listeners to filters
+            document.getElementById('sortBy').addEventListener('change', function() {
+                document.getElementById('filterForm').submit();
+            });
+            document.getElementById('filterRating').addEventListener('change', function() {
+                document.getElementById('filterForm').submit();
+            });
+            document.getElementById('filterAvailability').addEventListener('change', function() {
+                document.getElementById('filterForm').submit();
+            });
+        });
+
+        // Handle pagination click
+        function changePage(page) {
+            document.getElementById('page').value = page;
+            document.getElementById('filterForm').submit();
+        }
+    </script>
+    <%@ include file="_booking_modal.jsp" %>
 </body>
 </html>

@@ -1,5 +1,8 @@
 package classes;
 
+import classes.DbConnector;
+import classes.User;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -20,26 +23,31 @@ public class Admin extends User {
         private Map<String, Integer> userCounts = new HashMap<>();
         private Map<String, Integer> appointmentStats = new HashMap<>();
         private int pendingReviewsCount;
-        private int activeMonitorsCount;
-        public Map<String, Integer> getUserCounts() { return userCounts; }
-        public Map<String, Integer> getAppointmentStats() { return appointmentStats; }
-        public int getPendingReviewsCount() { return pendingReviewsCount; }
-        public int getActiveMonitorsCount() { return activeMonitorsCount; }
+
+        public Map<String, Integer> getUserCounts() {
+            return userCounts;
+        }
+
+        public int getPendingReviewsCount() {
+            return pendingReviewsCount;
+        }
+
+        public Map<String, Integer> getAppointmentStats() {
+            return appointmentStats;
+        }
     }
 
     public static class UserDetails { 
         private int userId;
-        private String email, userType, fullName, createdAt;
+        private String email, userType, fullName;
         public int getUserId() { return userId; }
         public String getEmail() { return email; }
         public String getUserType() { return userType; }
         public String getFullName() { return fullName; }
-        public String getCreatedAt() { return createdAt; }
         public void setUserId(int id) { this.userId = id; }
         public void setEmail(String s) { this.email = s; }
         public void setUserType(String s) { this.userType = s; }
         public void setFullName(String s) { this.fullName = s; }
-        public void setCreatedAt(String s) { this.createdAt = s; }
     }
 
     public static class PendingReview {
@@ -59,20 +67,7 @@ public class Admin extends User {
         public void setReviewDate(String s) { this.reviewDate = s; }
     }
 
-    public static class ActiveMonitor {
-        private int monitorId;
-        private String adminName, monitoredUserEmail, monitoringReason, startDate;
-        public int getMonitorId() { return monitorId; }
-        public String getAdminName() { return adminName; }
-        public String getMonitoredUserEmail() { return monitoredUserEmail; }
-        public String getMonitoringReason() { return monitoringReason; }
-        public String getStartDate() { return startDate; }
-        public void setMonitorId(int id) { this.monitorId = id; }
-        public void setAdminName(String s) { this.adminName = s; }
-        public void setMonitoredUserEmail(String s) { this.monitoredUserEmail = s; }
-        public void setMonitoringReason(String s) { this.monitoringReason = s; }
-        public void setStartDate(String s) { this.startDate = s; }
-    }
+
 
     public static class Specialty {
         private int specialtyId;
@@ -94,9 +89,9 @@ public class Admin extends User {
     }
 
     // Constructor
-    public Admin(int adminId, int userId, String email) {
+    public Admin(int adminId, String email) {
         this.adminId = adminId;
-        this.setId(userId);
+        this.setId(adminId);
         this.setEmail(email);
     }
 
@@ -113,20 +108,64 @@ public class Admin extends User {
             try (ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM Reviews WHERE is_moderated = FALSE")) {
                 if (rs.next()) analytics.pendingReviewsCount = rs.getInt(1);
             }
-            try (ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM Monitors WHERE is_active = TRUE")) {
-                if (rs.next()) analytics.activeMonitorsCount = rs.getInt(1);
-            }
+
+
         }
         return analytics;
     }
 
+    public List<UserDetails> getRecentActivity() throws SQLException {
+        List<UserDetails> recentUsers = new ArrayList<>();
+        String sql = "SELECT u.user_id, u.email, u.user_type, " +
+                     "CASE " +
+                     "    WHEN u.user_type = 'Admin' THEN CONCAT(a.first_name, ' ', a.last_name) " +
+                     "    WHEN u.user_type = 'Doctor' THEN CONCAT(d.first_name, ' ', d.last_name) " +
+                     "    WHEN u.user_type = 'Patient' THEN CONCAT(p.first_name, ' ', p.last_name) " +
+                     "    WHEN u.user_type = 'Hospital' THEN h.hospital_name " +
+                     "END as full_name " +
+                     "FROM Users u " +
+                     "LEFT JOIN Admin a ON u.user_id = a.admin_id " +
+                     "LEFT JOIN Doctor d ON u.user_id = d.doctor_id " +
+                     "LEFT JOIN Patient p ON u.user_id = p.patient_id " +
+                     "LEFT JOIN Hospital h ON u.user_id = h.hospital_id " +
+                     "ORDER BY u.user_id DESC LIMIT 5";
+        try (Connection conn = DbConnector.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql);
+             ResultSet rs = pstmt.executeQuery()) {
+            while (rs.next()) {
+                UserDetails user = new UserDetails();
+                user.setUserId(rs.getInt("user_id"));
+                user.setEmail(rs.getString("email"));
+                user.setUserType(rs.getString("user_type"));
+                user.setFullName(rs.getString("full_name"));
+                recentUsers.add(user);
+            }
+        }
+        return recentUsers;
+    }
+
     public List<UserDetails> getAllUsers(String userTypeFilter) throws SQLException {
         List<UserDetails> users = new ArrayList<>();
-        String sql = "SELECT user_id, email, user_type, full_name, created_at FROM v_user_complete_info";
-        if (userTypeFilter != null && !userTypeFilter.trim().isEmpty()) sql += " WHERE user_type = ?";
-        sql += " ORDER BY created_at DESC;";
+        String sql = "SELECT u.user_id, u.email, u.user_type, " +
+                     "CASE " +
+                     "    WHEN u.user_type = 'Admin' THEN CONCAT(a.first_name, ' ', a.last_name) " +
+                     "    WHEN u.user_type = 'Doctor' THEN CONCAT(d.first_name, ' ', d.last_name) " +
+                     "    WHEN u.user_type = 'Patient' THEN CONCAT(p.first_name, ' ', p.last_name) " +
+                     "    WHEN u.user_type = 'Hospital' THEN h.hospital_name " +
+                     "END as full_name " +
+                     "FROM Users u " +
+                     "LEFT JOIN Admin a ON u.user_id = a.admin_id " +
+                     "LEFT JOIN Doctor d ON u.user_id = d.doctor_id " +
+                     "LEFT JOIN Patient p ON u.user_id = p.patient_id " +
+                     "LEFT JOIN Hospital h ON u.user_id = h.hospital_id";
+        if (userTypeFilter != null && !userTypeFilter.trim().isEmpty()) {
+            sql += " WHERE u.user_type = ?";
+        }
+        sql += " ORDER BY u.user_id DESC;";
         try (Connection conn = DbConnector.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            if (userTypeFilter != null && !userTypeFilter.trim().isEmpty()) pstmt.setString(1, userTypeFilter);
+            if (userTypeFilter != null && !userTypeFilter.trim().isEmpty()) {
+                pstmt.setString(1, userTypeFilter);
+            }
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
                     UserDetails user = new UserDetails();
@@ -134,7 +173,6 @@ public class Admin extends User {
                     user.setEmail(rs.getString("email"));
                     user.setUserType(rs.getString("user_type"));
                     user.setFullName(rs.getString("full_name"));
-                    user.setCreatedAt(rs.getTimestamp("created_at").toString());
                     users.add(user);
                 }
             }
@@ -185,42 +223,18 @@ public class Admin extends User {
         }
     }
 
-    public List<ActiveMonitor> getActiveMonitors() throws SQLException {
-        List<ActiveMonitor> monitors = new ArrayList<>();
-        String sql = "SELECT m.monitor_id, CONCAT(a.first_name, ' ', a.last_name) as admin_name, " +
-                     "u.email as monitored_user_email, m.monitoring_reason, m.monitoring_start_date " +
-                     "FROM Monitors m JOIN Admin a ON m.admin_id = a.admin_id JOIN Users u ON m.monitored_user_id = u.user_id " +
-                     "WHERE m.is_active = TRUE ORDER BY m.monitoring_start_date DESC;";
-        try (Connection conn = DbConnector.getConnection(); Statement stmt = conn.createStatement(); ResultSet rs = stmt.executeQuery(sql)) {
-            while (rs.next()) {
-                ActiveMonitor monitor = new ActiveMonitor();
-                monitor.setMonitorId(rs.getInt("monitor_id"));
-                monitor.setAdminName(rs.getString("admin_name"));
-                monitor.setMonitoredUserEmail(rs.getString("monitored_user_email"));
-                monitor.setMonitoringReason(rs.getString("monitoring_reason"));
-                monitor.setStartDate(rs.getDate("monitoring_start_date").toString());
-                monitors.add(monitor);
+    public static boolean userExists(int userId) throws SQLException {
+        String sql = "SELECT 1 FROM Users WHERE user_id = ?";
+        try (Connection conn = DbConnector.getConnection();
+            PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, userId);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                return rs.next();
             }
         }
-        return monitors;
     }
 
-    public boolean startMonitoring(int monitoredUserId, String reason) throws SQLException {
-        String sql = "INSERT INTO Monitors (admin_id, monitored_user_id, monitoring_start_date, monitoring_reason, is_active) VALUES (?, ?, CURDATE(), ?, TRUE);";
-        try (Connection conn = DbConnector.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setInt(1, this.adminId);
-            pstmt.setInt(2, monitoredUserId);
-            pstmt.setString(3, reason);
-            return pstmt.executeUpdate() > 0;
-        }
-    }
 
-    public boolean stopMonitoring(int monitorId) throws SQLException {
-        try (Connection conn = DbConnector.getConnection(); PreparedStatement pstmt = conn.prepareStatement("UPDATE Monitors SET is_active = FALSE, monitoring_end_date = CURDATE() WHERE monitor_id = ?")) {
-            pstmt.setInt(1, monitorId);
-            return pstmt.executeUpdate() > 0;
-        }
-    }
 
     public List<Specialty> getAllSpecialties() throws SQLException {
         List<Specialty> specialties = new ArrayList<>();

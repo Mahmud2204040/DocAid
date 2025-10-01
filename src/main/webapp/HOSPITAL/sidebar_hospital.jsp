@@ -1,6 +1,9 @@
 <!-- /HOSPITAL/sidebar_hospital.jsp -->
 <nav class="sidebar">
-    <div class="brand">DocAid</div>
+    <div class="brand">
+        <img src="${pageContext.request.contextPath}/images/logo.png" alt="DocAid Logo" style="height: 60px; margin-right: 15px;">
+        DocAid
+    </div>
     <ul class="nav flex-column">
         <!-- Dashboard -->
         <li class="nav-item">
@@ -8,6 +11,14 @@
                href="<%= request.getContextPath() %>/hospital/dashboard">
                 <i class="fas fa-tachometer-alt"></i>
                 Dashboard
+            </a>
+        </li>
+        <!-- Profile -->
+        <li class="nav-item">
+            <a class="nav-link <%= "profile".equals(request.getAttribute("activePage")) ? "active" : "" %>"
+               href="<%= request.getContextPath() %>/hospital/profile">
+                <i class="fas fa-hospital"></i>
+                My Profile
             </a>
         </li>
         <!-- Doctor Directory -->
@@ -42,14 +53,6 @@
                 Patient Feedback
             </a>
         </li>
-        <!-- Profile -->
-        <li class="nav-item">
-            <a class="nav-link <%= "profile".equals(request.getAttribute("activePage")) ? "active" : "" %>"
-               href="<%= request.getContextPath() %>/hospital/profile">
-                <i class="fas fa-hospital"></i>
-                My Profile
-            </a>
-        </li>
         <!-- Sign Out -->
         <li class="nav-item mt-auto">
             <a class="nav-link" href="<%= request.getContextPath() %>/sign_out.jsp">
@@ -76,8 +79,11 @@
     .sidebar .brand {
         font-size: 1.5rem;
         font-weight: bold;
-        text-align: center;
+        text-align: left;
         margin-bottom: 20px;
+        padding-left: 20px;
+        display: flex;
+        align-items: center;
     }
     .sidebar .nav-link {
         color: #adb5bd;

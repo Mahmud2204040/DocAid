@@ -6,7 +6,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import java.sql.Timestamp;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -32,15 +32,12 @@ public class Doctor extends User {
     private String specialtyName;
     private Integer hospitalId;
     private String hospitalName;
-    private boolean isVerified;
     private double rating;
     private int reviewCount;
-    private boolean isAvailableForPatients;
+   
     private double distance;
     private boolean availableToday;
     private String nextAvailableSlot;
-    private Timestamp createdAt;
-    private Timestamp updatedAt;
 
     private static final Logger logger = Logger.getLogger(Doctor.class.getName());
 
@@ -83,20 +80,15 @@ public class Doctor extends User {
     public void setHospitalId(Integer hospitalId) { this.hospitalId = hospitalId; }
     public String getHospitalName() { return hospitalName; }
     public void setHospitalName(String hospitalName) { this.hospitalName = hospitalName; }
-    public boolean isVerified() { return isVerified; }
-    public void setVerified(boolean isVerified) { this.isVerified = isVerified; }
     public double getRating() { return rating; }
     public void setRating(double rating) { this.rating = rating; }
     public int getReviewCount() { return reviewCount; }
     public void setReviewCount(int reviewCount) { this.reviewCount = reviewCount; }
-    public boolean isAvailableForPatients() { return isAvailableForPatients; }
-    public void setAvailableForPatients(boolean isAvailableForPatients) { this.isAvailableForPatients = isAvailableForPatients; }
+    
     public void setSpecialty(String specialtyName) { this.specialtyName = specialtyName; }
 
     public String getSpecialty() { return this.specialtyName; } // Added to match JSP expression language
 
-    public void setCreatedAt(Timestamp createdAt) { this.createdAt = createdAt; }
-    public void setUpdatedAt(Timestamp updatedAt) { this.updatedAt = updatedAt; }
     public void setDistance(double distance) { this.distance = distance; }
 
     // Inner DTO classes
@@ -115,19 +107,19 @@ public class Doctor extends User {
 
     public static class AffiliationRequestDetails {
         private int requestId;
-        private String hospitalName, requestDate;
+        private String hospitalName;
         public int getRequestId() { return requestId; }
         public void setRequestId(int id) { this.requestId = id; }
         public String getHospitalName() { return hospitalName; }
         public void setHospitalName(String name) { this.hospitalName = name; }
-        public String getRequestDate() { return requestDate; }
-        public void setRequestDate(String date) { this.requestDate = date; }
     }
 
     // Database Methods
     public void saveToDatabase(Connection con) throws SQLException {
-        String query = "INSERT INTO Doctor (user_id, first_name, last_name, gender, license_number, exp_years, bio, fee, address, latitude, longitude, specialty_id, hospital_id, phone) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        try (PreparedStatement pstmt = con.prepareStatement(query, PreparedStatement.RETURN_GENERATED_KEYS)) {
+        // Step 1: Insert into Doctor table
+        String query = "INSERT INTO Doctor (doctor_id, first_name, last_name, gender, license_number, exp_years, bio, fee, address, latitude, longitude, specialty_id, hospital_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        try (PreparedStatement pstmt = con.prepareStatement(query)) {
+            this.setDoctorId(this.getId()); // doctor_id is the user_id
             pstmt.setInt(1, this.getId());
             pstmt.setString(2, this.firstName);
             pstmt.setString(3, this.lastName);
@@ -141,12 +133,17 @@ public class Doctor extends User {
             pstmt.setDouble(11, this.longitude);
             pstmt.setObject(12, this.specialtyId);
             pstmt.setObject(13, this.hospitalId);
-            pstmt.setString(14, this.phone);
             pstmt.executeUpdate();
-            try (ResultSet generatedKeys = pstmt.getGeneratedKeys()) {
-                if (generatedKeys.next()) {
-                    this.doctorId = generatedKeys.getInt(1);
-                }
+        }
+
+        // Step 2: Insert phone number into User_Contact table if it exists
+        if (this.phone != null && !this.phone.trim().isEmpty()) {
+            // Using INSERT ... ON DUPLICATE KEY UPDATE to handle existing contacts
+            String contactQuery = "INSERT INTO User_Contact (user_id, contact_no, contact_type) VALUES (?, ?, 'Primary') ON DUPLICATE KEY UPDATE contact_no = VALUES(contact_no)";
+            try (PreparedStatement contactPstmt = con.prepareStatement(contactQuery)) {
+                contactPstmt.setInt(1, this.getId());
+                contactPstmt.setString(2, this.phone);
+                contactPstmt.executeUpdate();
             }
         }
     }
@@ -172,7 +169,7 @@ public class Doctor extends User {
 
     public List<AffiliationRequestDetails> getPendingAffiliationRequests() throws SQLException {
         List<AffiliationRequestDetails> requests = new ArrayList<>();
-        String sql = "SELECT ar.request_id, h.hospital_name, ar.created_at FROM AffiliationRequest ar JOIN Hospital h ON ar.hospital_id = h.hospital_id WHERE ar.doctor_id = ? AND ar.request_status = 'Pending' ORDER BY ar.created_at DESC";
+        String sql = "SELECT ar.request_id, h.hospital_name FROM AffiliationRequest ar JOIN Hospital h ON ar.hospital_id = h.hospital_id WHERE ar.doctor_id = ? AND ar.request_status = 'Pending'";
         try (Connection conn = DbConnector.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, this.getDoctorId());
             try (ResultSet rs = pstmt.executeQuery()) {
@@ -180,7 +177,6 @@ public class Doctor extends User {
                     AffiliationRequestDetails req = new AffiliationRequestDetails();
                     req.setRequestId(rs.getInt("request_id"));
                     req.setHospitalName(rs.getString("hospital_name"));
-                    req.setRequestDate(rs.getTimestamp("created_at").toString());
                     requests.add(req);
                 }
             }
@@ -243,22 +239,34 @@ public class Doctor extends User {
         }
     }
 
-    public static Doctor getDoctorById(Connection con, int doctorId) throws SQLException {
+    public static Doctor getDoctorById(Connection con, int doctorId, String viewerRole) throws SQLException {
+        String contactType;
+        if ("Patient".equals(viewerRole)) {
+            contactType = "Appointment";
+        } else if ("Hospital".equals(viewerRole)) {
+            contactType = "Primary";
+        }
+        else {
+            // Default for other roles or if viewerRole is null
+            contactType = "Primary"; 
+        }
+
         String sql = "SELECT d.*, s.specialty_name, h.hospital_name, u.email, uc.contact_no " +
                      "FROM Doctor d " +
-                     "JOIN Users u ON d.user_id = u.user_id " +
+                     "JOIN Users u ON d.doctor_id = u.user_id " +
                      "LEFT JOIN Specialties s ON d.specialty_id = s.specialty_id " +
                      "LEFT JOIN Hospital h ON d.hospital_id = h.hospital_id " +
-                     "LEFT JOIN User_Contact uc ON u.user_id = uc.user_id AND uc.contact_type = 'Primary' " +
-                     "WHERE d.doctor_id = ?;";
+                     "LEFT JOIN User_Contact uc ON u.user_id = uc.user_id AND uc.contact_type = ? " +
+                     "WHERE d.doctor_id = ?;";;
         
         try (PreparedStatement pstmt = con.prepareStatement(sql)) {
-            pstmt.setInt(1, doctorId);
+            pstmt.setString(1, contactType);
+            pstmt.setInt(2, doctorId);
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) {
                     Doctor doctor = new Doctor();
                     doctor.setDoctorId(rs.getInt("doctor_id"));
-                    doctor.setId(rs.getInt("user_id"));
+                    doctor.setId(rs.getInt("doctor_id"));
                     doctor.setFirstName(rs.getString("first_name"));
                     doctor.setLastName(rs.getString("last_name"));
                     doctor.setDisplayName(rs.getString("first_name") + " " + rs.getString("last_name"));
@@ -271,10 +279,8 @@ public class Doctor extends User {
                     doctor.setPhone(rs.getString("contact_no"));
                     doctor.setSpecialtyName(rs.getString("specialty_name"));
                     doctor.setHospitalName(rs.getString("hospital_name"));
-                    doctor.setVerified(rs.getBoolean("is_verified"));
                     doctor.setRating(rs.getDouble("rating"));
                     doctor.setReviewCount(rs.getInt("review_count"));
-                    doctor.setAvailableForPatients(rs.getBoolean("is_available_for_patients"));
                     doctor.setEmail(rs.getString("email"));
                     return doctor;
                 } else {

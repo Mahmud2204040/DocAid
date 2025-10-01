@@ -58,7 +58,7 @@ public class DbConnectorTest {
             DbConnector.getConnection();
             fail("SQLException was expected but not thrown");
         } catch (SQLException e) {
-            assertEquals("Failed to get a valid connection from the pool.", e.getMessage());
+            assertEquals("Failed to get a valid connection from the pool/driver.", e.getMessage());
         }
     }
 }

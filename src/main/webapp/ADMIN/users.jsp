@@ -52,7 +52,6 @@
                         <th>Full Name</th>
                         <th>Email</th>
                         <th>Role</th>
-                        <th>Date Joined</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -63,9 +62,8 @@
                             <td>${user.fullName}</td>
                             <td>${user.email}</td>
                             <td><span class="badge bg-secondary">${user.userType}</span></td>
-                            <td>${user.createdAt}</td>
                             <td>
-                                <button class="btn btn-sm btn-outline-primary"><i class="fas fa-edit"></i> Edit</button>
+                                
                                 <button class="btn btn-sm btn-outline-danger delete-user-btn"
                                         data-bs-toggle="modal"
                                         data-bs-target="#deleteUserModal"
@@ -78,7 +76,7 @@
                     </c:forEach>
                     <c:if test="${empty userList}">
                         <tr>
-                            <td colspan="6" class="text-center">No users found.</td>
+                            <td colspan="5" class="text-center">No users found.</td>
                         </tr>
                     </c:if>
                 </tbody>

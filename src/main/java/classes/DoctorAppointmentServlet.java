@@ -41,17 +41,8 @@ public class DoctorAppointmentServlet extends HttpServlet {
         int totalAppointments = 0, pendingAppointments = 0, approvedAppointments = 0, cancelledAppointments = 0;
 
         try (Connection conn = DbConnector.getConnection()) {
-            // First, get the doctor_id from the user_id
-            int doctorId = -1;
-            String getDoctorIdSql = "SELECT doctor_id FROM Doctor WHERE user_id = ?";
-            try (PreparedStatement pstmt = conn.prepareStatement(getDoctorIdSql)) {
-                pstmt.setInt(1, userId);
-                try (ResultSet rs = pstmt.executeQuery()) {
-                    if (rs.next()) {
-                        doctorId = rs.getInt("doctor_id");
-                    }
-                }
-            }
+            // In the new schema, doctor_id is the same as user_id.
+            int doctorId = userId;
 
             if (doctorId != -1) {
                 // Now, get the appointments for that doctor_id

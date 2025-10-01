@@ -40,7 +40,7 @@ public class DoctorScheduleServlet extends HttpServlet {
         }
 
         try (Connection conn = DbConnector.getConnection()) {
-            int doctorId = getDoctorId(conn, userId);
+            int doctorId = userId;
 
             if (doctorId != -1) {
                 String sql = "SELECT visiting_day, start_time, end_time FROM Doctor_schedule WHERE doctor_id = ? ORDER BY start_time";
@@ -82,39 +82,46 @@ public class DoctorScheduleServlet extends HttpServlet {
 
         Integer userId = (Integer) session.getAttribute("user_id");
         String day = request.getParameter("day");
-        String startTime = request.getParameter("startTime");
-        String endTime = request.getParameter("endTime");
+        String startTimeStr = request.getParameter("startTime");
+        String endTimeStr = request.getParameter("endTime");
+
+        try {
+            java.time.LocalTime startTime = java.time.LocalTime.parse(startTimeStr);
+            java.time.LocalTime endTime = java.time.LocalTime.parse(endTimeStr);
+
+            if (startTime.isAfter(endTime) || startTime.equals(endTime)) {
+                session.setAttribute("scheduleError", "Start time must be before end time.");
+                response.sendRedirect(request.getContextPath() + "/doctor/schedule");
+                return;
+            }
+        } catch (java.time.format.DateTimeParseException e) {
+            session.setAttribute("scheduleError", "Invalid time format. Please use HH:mm.");
+            response.sendRedirect(request.getContextPath() + "/doctor/schedule");
+            return;
+        }
 
         try (Connection conn = DbConnector.getConnection()) {
-            int doctorId = getDoctorId(conn, userId);
+            int doctorId = userId;
             if (doctorId != -1) {
-                String sql = "INSERT INTO Doctor_schedule (doctor_id, visiting_day, start_time, end_time, is_available) VALUES (?, ?, ?, ?, TRUE)";
+                String sql = "INSERT INTO Doctor_schedule (doctor_id, visiting_day, start_time, end_time) VALUES (?, ?, ?, ?)";
                 try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
                     pstmt.setInt(1, doctorId);
                     pstmt.setString(2, day);
-                    pstmt.setString(3, startTime);
-                    pstmt.setString(4, endTime);
+                    pstmt.setString(3, startTimeStr);
+                    pstmt.setString(4, endTimeStr);
                     pstmt.executeUpdate();
                 }
             }
         } catch (SQLException e) {
-            throw new ServletException("Database error adding schedule slot.", e);
+            if (e.getErrorCode() == 1062) { // Handle unique constraint violation
+                session.setAttribute("scheduleError", "This time slot already exists for the selected day.");
+            } else {
+                throw new ServletException("Database error adding schedule slot.", e);
+            }
         }
 
         response.sendRedirect(request.getContextPath() + "/doctor/schedule");
     }
 
-    private int getDoctorId(Connection conn, int userId) throws SQLException {
-        int doctorId = -1;
-        String getDoctorIdSql = "SELECT doctor_id FROM Doctor WHERE user_id = ?";
-        try (PreparedStatement pstmt = conn.prepareStatement(getDoctorIdSql)) {
-            pstmt.setInt(1, userId);
-            try (ResultSet rs = pstmt.executeQuery()) {
-                if (rs.next()) {
-                    doctorId = rs.getInt("doctor_id");
-                }
-            }
-        }
-        return doctorId;
-    }
+
 }

@@ -22,14 +22,12 @@ import java.util.Locale;
  */
 public class MedicalTest {
     
-    private int testId;
+
     private int hospitalId;
     private String testName;
     private BigDecimal price;
     private String description;
-    private boolean isActive;
-    private Timestamp createdAt;
-    private Timestamp updatedAt;
+
     
     // Extended properties for frontend functionality
     private String category;
@@ -51,7 +49,7 @@ public class MedicalTest {
      */
     public MedicalTest() {
         this.price = BigDecimal.ZERO;
-        this.isActive = true;
+
     }
     
     /**
@@ -67,21 +65,14 @@ public class MedicalTest {
     /**
      * Constructor with complete test information.
      */
-    public MedicalTest(int hospitalId, String testName, BigDecimal price, String description, boolean isActive) {
+    public MedicalTest(int hospitalId, String testName, BigDecimal price, String description) {
         this(hospitalId, testName, price);
         setDescription(description);
-        setActive(isActive);
     }
     
     // Getters and Setters with validation
     
-    public int getTestId() {
-        return testId;
-    }
-    
-    public void setTestId(int testId) {
-        this.testId = testId;
-    }
+
     
     public int getHospitalId() {
         return hospitalId;
@@ -136,25 +127,7 @@ public class MedicalTest {
         this.description = description != null ? description.trim() : null;
     }
     
-    public boolean isActive() {
-        return isActive;
-    }
-    
-    public void setActive(boolean active) {
-        this.isActive = active;
-    }
-    
-    public Timestamp getCreatedAt() {
-        return createdAt;
-    }
-    
-    // No setter for createdAt (DB-managed)
-    
-    public Timestamp getUpdatedAt() {
-        return updatedAt;
-    }
-    
-    // No setter for updatedAt (DB-managed)
+
     
     // Extended properties for frontend functionality
     
@@ -204,8 +177,11 @@ public class MedicalTest {
      * Returns formatted price string for display.
      */
     public String getFormattedPrice() {
-        if (price == null) return "$0.00";
+        if (price == null) return "BDT 0.00";
         NumberFormat formatter = NumberFormat.getCurrencyInstance(Locale.US);
+        java.text.DecimalFormatSymbols symbols = ((java.text.DecimalFormat) formatter).getDecimalFormatSymbols();
+        symbols.setCurrencySymbol("BDT ");
+        ((java.text.DecimalFormat) formatter).setDecimalFormatSymbols(symbols);
         return formatter.format(price);
     }
     
@@ -219,19 +195,7 @@ public class MedicalTest {
         return description.substring(0, maxLength - 3) + "...";
     }
     
-    /**
-     * Checks if the test is available (active).
-     */
-    public boolean isAvailable() {
-        return isActive;
-    }
-    
-    /**
-     * Returns the availability status as a string.
-     */
-    public String getAvailabilityStatus() {
-        return isActive ? "Available" : "Unavailable";
-    }
+
     
     /**
      * Validates all test data before database operations.
@@ -284,9 +248,9 @@ public class MedicalTest {
     public void saveToDatabase(Connection con) throws SQLException {
         validate(); // Validate before saving
         
-        String query = "INSERT INTO Medical_test (hospital_id, test_name, price, description, is_active) " +
-                       "VALUES (?, ?, ?, ?, ?)";
-        try (PreparedStatement pstmt = con.prepareStatement(query, PreparedStatement.RETURN_GENERATED_KEYS)) {
+        String query = "INSERT INTO Medical_test (hospital_id, test_name, price, description) " +
+                       "VALUES (?, ?, ?, ?)";
+        try (PreparedStatement pstmt = con.prepareStatement(query)) {
             pstmt.setInt(1, this.hospitalId);
             pstmt.setString(2, this.testName);
             pstmt.setBigDecimal(3, this.price);
@@ -297,16 +261,9 @@ public class MedicalTest {
                 pstmt.setNull(4, java.sql.Types.LONGVARCHAR);
             }
             
-            pstmt.setBoolean(5, this.isActive);
-            
             int rowsAffected = pstmt.executeUpdate();
             if (rowsAffected > 0) {
-                try (ResultSet generatedKeys = pstmt.getGeneratedKeys()) {
-                    if (generatedKeys.next()) {
-                        this.testId = generatedKeys.getInt(1);
-                    }
-                }
-                logger.info("Medical test saved successfully with ID: " + this.testId);
+                logger.info("Medical test saved successfully.");
             }
         } catch (SQLException e) {
             logger.log(Level.SEVERE, "Error saving medical test to database", e);
@@ -324,26 +281,23 @@ public class MedicalTest {
     public void updateToDatabase(Connection con) throws SQLException {
         validate(); // Validate before updating
         
-        String query = "UPDATE Medical_test SET hospital_id=?, test_name=?, price=?, description=?, is_active=? WHERE test_id=?";
+        String query = "UPDATE Medical_test SET price=?, description=? WHERE hospital_id=? AND test_name=?";
         try (PreparedStatement pstmt = con.prepareStatement(query)) {
-            pstmt.setInt(1, this.hospitalId);
-            pstmt.setString(2, this.testName);
-            pstmt.setBigDecimal(3, this.price);
+            pstmt.setBigDecimal(1, this.price);
             
             if (this.description != null && !this.description.trim().isEmpty()) {
-                pstmt.setString(4, this.description);
+                pstmt.setString(2, this.description);
             } else {
-                pstmt.setNull(4, java.sql.Types.LONGVARCHAR);
+                pstmt.setNull(2, java.sql.Types.LONGVARCHAR);
             }
-            
-            pstmt.setBoolean(5, this.isActive);
-            pstmt.setInt(6, this.testId);
+            pstmt.setInt(4, this.hospitalId);
+            pstmt.setString(5, this.testName);
             
             int rowsAffected = pstmt.executeUpdate();
             if (rowsAffected == 0) {
-                throw new SQLException("No medical test found to update with ID: " + this.testId);
+                throw new SQLException("No medical test found to update with name: " + this.testName);
             }
-            logger.info("Medical test updated successfully with ID: " + this.testId);
+            logger.info("Medical test updated successfully with name: " + this.testName);
         } catch (SQLException e) {
             logger.log(Level.SEVERE, "Error updating medical test in database", e);
             throw e;
@@ -357,27 +311,25 @@ public class MedicalTest {
      * @param testId The test ID to load.
      * @throws SQLException if a database error occurs or no record found.
      */
-    public void loadFromDatabase(Connection con, int testId) throws SQLException {
-        String query = "SELECT * FROM Medical_test WHERE test_id = ?";
+    public void loadFromDatabase(Connection con, int hospitalId, String testName) throws SQLException {
+        String query = "SELECT * FROM Medical_test WHERE hospital_id = ? AND test_name = ?";
         try (PreparedStatement pstmt = con.prepareStatement(query)) {
-            pstmt.setInt(1, testId);
+            pstmt.setInt(1, hospitalId);
+            pstmt.setString(2, testName);
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) {
-                    this.testId = rs.getInt("test_id");
                     this.hospitalId = rs.getInt("hospital_id");
                     this.testName = rs.getString("test_name");
                     this.price = rs.getBigDecimal("price");
                     this.description = rs.getString("description");
-                    this.isActive = rs.getBoolean("is_active");
-                    this.createdAt = rs.getTimestamp("created_at");
-                    this.updatedAt = rs.getTimestamp("updated_at");
+
                     
                     // Set derived category
                     this.category = determineCategory();
                     
-                    logger.info("Medical test loaded successfully with ID: " + testId);
+                    logger.info("Medical test loaded successfully with name: " + testName);
                 } else {
-                    throw new SQLException("No medical test found with ID: " + testId);
+                    throw new SQLException("No medical test found with name: " + testName);
                 }
             }
         } catch (SQLException e) {
@@ -393,14 +345,15 @@ public class MedicalTest {
      * @throws SQLException if a database error occurs.
      */
     public void deleteFromDatabase(Connection con) throws SQLException {
-        String query = "DELETE FROM Medical_test WHERE test_id = ?";
+        String query = "DELETE FROM Medical_test WHERE hospital_id = ? AND test_name = ?";
         try (PreparedStatement pstmt = con.prepareStatement(query)) {
-            pstmt.setInt(1, this.testId);
+            pstmt.setInt(1, this.hospitalId);
+            pstmt.setString(2, this.testName);
             int rowsAffected = pstmt.executeUpdate();
             if (rowsAffected == 0) {
-                throw new SQLException("No medical test found to delete with ID: " + this.testId);
+                throw new SQLException("No medical test found to delete with name: " + this.testName);
             }
-            logger.info("Medical test deleted successfully with ID: " + this.testId);
+            logger.info("Medical test deleted successfully with name: " + this.testName);
         } catch (SQLException e) {
             logger.log(Level.SEVERE, "Error deleting medical test from database", e);
             throw e;
@@ -425,14 +378,10 @@ public class MedicalTest {
             
             while (rs.next()) {
                 MedicalTest test = new MedicalTest();
-                test.testId = rs.getInt("test_id");
                 test.hospitalId = rs.getInt("hospital_id");
                 test.testName = rs.getString("test_name");
                 test.price = rs.getBigDecimal("price");
                 test.description = rs.getString("description");
-                test.isActive = rs.getBoolean("is_active");
-                test.createdAt = rs.getTimestamp("created_at");
-                test.updatedAt = rs.getTimestamp("updated_at");
                 test.category = test.determineCategory();
                 tests.add(test);
             }
@@ -461,14 +410,10 @@ public class MedicalTest {
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
                     MedicalTest test = new MedicalTest();
-                    test.testId = rs.getInt("test_id");
                     test.hospitalId = rs.getInt("hospital_id");
                     test.testName = rs.getString("test_name");
                     test.price = rs.getBigDecimal("price");
                     test.description = rs.getString("description");
-                    test.isActive = rs.getBoolean("is_active");
-                    test.createdAt = rs.getTimestamp("created_at");
-                    test.updatedAt = rs.getTimestamp("updated_at");
                     test.category = test.determineCategory();
                     tests.add(test);
                 }
@@ -501,14 +446,10 @@ public class MedicalTest {
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
                     MedicalTest test = new MedicalTest();
-                    test.testId = rs.getInt("test_id");
                     test.hospitalId = rs.getInt("hospital_id");
                     test.testName = rs.getString("test_name");
                     test.price = rs.getBigDecimal("price");
                     test.description = rs.getString("description");
-                    test.isActive = rs.getBoolean("is_active");
-                    test.createdAt = rs.getTimestamp("created_at");
-                    test.updatedAt = rs.getTimestamp("updated_at");
                     test.category = test.determineCategory();
                     tests.add(test);
                 }
@@ -541,14 +482,11 @@ public class MedicalTest {
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
                     MedicalTest test = new MedicalTest();
-                    test.testId = rs.getInt("test_id");
                     test.hospitalId = rs.getInt("hospital_id");
                     test.testName = rs.getString("test_name");
                     test.price = rs.getBigDecimal("price");
                     test.description = rs.getString("description");
-                    test.isActive = rs.getBoolean("is_active");
-                    test.createdAt = rs.getTimestamp("created_at");
-                    test.updatedAt = rs.getTimestamp("updated_at");
+
                     test.category = test.determineCategory();
                     tests.add(test);
                 }
@@ -569,47 +507,19 @@ public class MedicalTest {
      * @return List of active MedicalTest objects for the hospital.
      * @throws SQLException if a database error occurs.
      */
-    public static List<MedicalTest> getActiveMedicalTestsByHospital(Connection con, int hospitalId) throws SQLException {
-        List<MedicalTest> tests = new ArrayList<>();
-        String query = "SELECT * FROM Medical_test WHERE hospital_id = ? AND is_active = TRUE ORDER BY test_name";
-        
-        try (PreparedStatement pstmt = con.prepareStatement(query)) {
-            pstmt.setInt(1, hospitalId);
-            try (ResultSet rs = pstmt.executeQuery()) {
-                while (rs.next()) {
-                    MedicalTest test = new MedicalTest();
-                    test.testId = rs.getInt("test_id");
-                    test.hospitalId = rs.getInt("hospital_id");
-                    test.testName = rs.getString("test_name");
-                    test.price = rs.getBigDecimal("price");
-                    test.description = rs.getString("description");
-                    test.isActive = rs.getBoolean("is_active");
-                    test.createdAt = rs.getTimestamp("created_at");
-                    test.updatedAt = rs.getTimestamp("updated_at");
-                    test.category = test.determineCategory();
-                    tests.add(test);
-                }
-            }
-        } catch (SQLException e) {
-            logger.log(Level.SEVERE, "Error loading active medical tests by hospital from database", e);
-            throw e;
-        }
-        
-        return tests;
-    }
+
     
     // Utility Methods
     
     @Override
     public String toString() {
         return "MedicalTest{" +
-                "testId=" + testId +
-                ", hospitalId=" + hospitalId +
-                ", testName='" + testName + '\'' +
+                "hospitalId=" + hospitalId +
+                ", testName='" + testName + "'" +
                 ", price=" + price +
-                ", description='" + description + '\'' +
-                ", isActive=" + isActive +
-                ", category='" + category + '\'' +
+                ", description='" + description + "'" +
+
+                ", category='" + category + "'" +
                 '}';
     }
     
@@ -618,12 +528,13 @@ public class MedicalTest {
         if (this == obj) return true;
         if (obj == null || getClass() != obj.getClass()) return false;
         MedicalTest that = (MedicalTest) obj;
-        return testId == that.testId;
+        return hospitalId == that.hospitalId &&
+                java.util.Objects.equals(testName, that.testName);
     }
     
     @Override
     public int hashCode() {
-        return Integer.hashCode(testId);
+        return java.util.Objects.hash(hospitalId, testName);
     }
     
     /**

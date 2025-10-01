@@ -36,32 +36,13 @@
                 session.setAttribute("user_role", user.getRole());
                 session.setAttribute("email", user.getEmail()); // Also set email for convenience
 
-                // If user is a Hospital, fetch and set the hospital_id in the session
+                // If user is a Hospital, set the hospital_id in the session.
+                // In the new schema, hospital_id is the same as user_id.
                 if ("Hospital".equalsIgnoreCase(user.getRole())) {
-                    try (java.sql.PreparedStatement pstmt = con.prepareStatement("SELECT hospital_id FROM Hospital WHERE user_id = ?")) {
-                        pstmt.setInt(1, user.getId());
-                        try (java.sql.ResultSet rs = pstmt.executeQuery()) {
-                            if (rs.next()) {
-                                session.setAttribute("hospital_id", rs.getInt("hospital_id"));
-                            } else {
-                                // This case should ideally not happen if data is consistent
-                                logger.warning("Hospital user logged in but no corresponding hospital_id found for user_id: " + user.getId());
-                                response.sendRedirect("log.jsp?error=6"); // Custom error for missing role-specific ID
-                                return;
-                            }
-                        }
-                    }
+                    session.setAttribute("hospital_id", user.getId());
                 }
 
-                // Optional: Handle "remember me"
-                if (request.getParameter("remember_me") != null) {
-                    Cookie ck = new Cookie("auth", user.getAuth_key());
-                    ck.setMaxAge(60 * 60 * 24 * 30);  // 30 days
-                    ck.setHttpOnly(true);
-                    ck.setSecure(request.isSecure());
-                    ck.setPath(request.getContextPath());
-                    response.addCookie(ck);
-                }
+
 
                 // Redirect based on role to the correct CONTROLLER SERVLET
                 String destination = "";

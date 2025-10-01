@@ -11,6 +11,8 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/bootstrap.min.css">
     <!-- FontAwesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
     <!-- Custom CSS for layout -->
     <style>
         /* When using a fixed sidebar, the main content wrapper needs a left margin 
@@ -36,16 +38,7 @@
                 <span class="navbar-brand mb-0 h1">Hospital Dashboard</span>
                 <div class="collapse navbar-collapse">
                     <ul class="navbar-nav ms-auto mt-2 mt-lg-0">
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle text-white" id="navbarDropdown" href="#" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                <i class="fas fa-hospital fa-fw"></i> Hospital
-                            </a>
-                            <div class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                                <a class="dropdown-item" href="${pageContext.request.contextPath}/hospital/profile">Profile Settings</a>
-                                <div class="dropdown-divider"></div>
-                                <a class="dropdown-item" href="${pageContext.request.contextPath}/sign_out.jsp">Logout</a>
-                            </div>
-                        </li>
+                        
                     </ul>
                 </div>
             </div>

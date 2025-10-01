@@ -40,33 +40,31 @@ public class DoctorProfileServlet extends HttpServlet {
         Integer userId = (Integer) session.getAttribute("user_id");
         Doctor doctorProfile = new Doctor();
 
-        // --- DEBUGGING --- 
-        System.out.println("[DoctorProfileServlet] Attempting to load profile for user_id from session: " + userId);
+        System.out.println("[DoctorProfileServlet] Loading profile for user_id: " + userId);
 
-        // 2. Database Logic (moved from JSP)
-        // This query is corrected to match the current schema
-        String sql = "SELECT d.*, s.specialty_name, h.hospital_name, u.email, uc.contact_no " +
+        // 3. Single Database Query (FIXED)
+        String sql = "SELECT d.*, s.specialty_name, h.hospital_name, u.email, " +
+                     "MAX(CASE WHEN uc.contact_type = 'Primary' THEN uc.contact_no END) AS primary_contact, " +
+                     "MAX(CASE WHEN uc.contact_type = 'Appointment' THEN uc.contact_no END) AS appointment_contact " +
                      "FROM Doctor d " +
-                     "JOIN Users u ON d.user_id = u.user_id " +
+                     "JOIN Users u ON d.doctor_id = u.user_id " +
                      "LEFT JOIN Specialties s ON d.specialty_id = s.specialty_id " +
                      "LEFT JOIN Hospital h ON d.hospital_id = h.hospital_id " +
-                     "LEFT JOIN User_Contact uc ON u.user_id = uc.user_id " +
-                     "WHERE d.user_id = ?;";
+                     "LEFT JOIN User_Contact uc ON d.doctor_id = uc.user_id " +
+                     "WHERE d.doctor_id = ? " +
+                     "GROUP BY d.doctor_id";
 
         try (Connection conn = DbConnector.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setInt(1, userId);
-
-            // --- DEBUGGING --- 
-            System.out.println("[DoctorProfileServlet] Executing query to find doctor profile.");
+            System.out.println("[DoctorProfileServlet] Executing query...");
 
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) {
-                    // --- DEBUGGING --- 
-                    System.out.println("[DoctorProfileServlet] SUCCESS: Doctor record found in database.");
+                    System.out.println("[DoctorProfileServlet] Doctor record found!");
 
-                    // Populate the Doctor bean
+                    // Populate the Doctor bean (FIXED - removed duplicate code)
                     doctorProfile.setId(userId);
                     doctorProfile.setDoctorId(rs.getInt("doctor_id"));
                     doctorProfile.setFirstName(rs.getString("first_name"));
@@ -77,15 +75,22 @@ public class DoctorProfileServlet extends HttpServlet {
                     doctorProfile.setBio(rs.getString("bio"));
                     doctorProfile.setFee(rs.getBigDecimal("fee"));
                     doctorProfile.setAddress(rs.getString("address"));
-                    doctorProfile.setPhone(rs.getString("contact_no"));
                     doctorProfile.setSpecialty(rs.getString("specialty_name"));
                     doctorProfile.setHospitalName(rs.getString("hospital_name"));
-                    // You would also set hospital name, etc.
-                    // request.setAttribute("hospitalName", rs.getString("hospital_name"));
+                    doctorProfile.setRating(rs.getDouble("rating"));
+                    doctorProfile.setReviewCount(rs.getInt("review_count"));
+                    doctorProfile.setEmail(rs.getString("email"));
+
+                    // FIXED: Use correct column names
+                    String primaryContact = rs.getString("primary_contact");
+                    String appointmentContact = rs.getString("appointment_contact");
+
+                    request.setAttribute("primaryContact", primaryContact != null ? primaryContact : "");
+                    request.setAttribute("appointmentContact", appointmentContact != null ? appointmentContact : "");
+
                 } else {
-                    // Handle case where no doctor profile exists for the user ID
-                    // --- DEBUGGING --- 
-                    System.out.println("[DoctorProfileServlet] FAILED: No doctor record found for user ID: " + userId);
+                    System.out.println("[DoctorProfileServlet] No doctor record found for user ID: " + userId);
+                    request.setAttribute("error", "Doctor profile not found.");
                 }
             }
         } catch (SQLException e) {
@@ -93,8 +98,10 @@ public class DoctorProfileServlet extends HttpServlet {
             throw new ServletException("Database error while fetching doctor profile.", e);
         }
 
-        // 3. Set attribute and forward to the JSP view
+        // 4. Set attributes and forward to correct JSP (FIXED)
         request.setAttribute("doctorProfile", doctorProfile);
+        request.setAttribute("activePage", "profile");
+        
         RequestDispatcher dispatcher = request.getRequestDispatcher("/DOCTOR/index.jsp");
         dispatcher.forward(request, response);
     }

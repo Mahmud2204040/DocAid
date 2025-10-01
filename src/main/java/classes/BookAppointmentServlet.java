@@ -40,21 +40,35 @@ public class BookAppointmentServlet extends HttpServlet {
             }
 
             try (Connection con = DbConnector.getConnection()) {
-                // Final availability check using the stored procedure
-                try (CallableStatement cst = con.prepareCall("{CALL CheckDoctorAvailability(?, ?, ?)}")) {
-                    cst.setInt(1, doctorId);
-                    cst.setDate(2, java.sql.Date.valueOf(appointmentDate));
-                    cst.setTime(3, java.sql.Time.valueOf(appointmentTime + ":00"));
-                    try (ResultSet rs = cst.executeQuery()) {
-                        if (rs.next()) {
-                            String status = rs.getString("status");
-                            if (!"AVAILABLE".equals(status)) {
-                                session.setAttribute("bookingError", "The selected time slot is no longer available. Please choose another time.");
-                                response.sendRedirect(request.getContextPath() + "/patient/doctor-profile?id=" + doctorId);
-                                return;
+                // Final availability check
+                boolean isAvailable = false;
+                String checkScheduleSql = "SELECT COUNT(*) FROM Doctor_schedule WHERE doctor_id = ? AND visiting_day = DAYNAME(?) AND ? BETWEEN start_time AND end_time";
+                try (PreparedStatement pst = con.prepareStatement(checkScheduleSql)) {
+                    pst.setInt(1, doctorId);
+                    pst.setDate(2, java.sql.Date.valueOf(appointmentDate));
+                    pst.setTime(3, java.sql.Time.valueOf(appointmentTime + ":00"));
+                    try (ResultSet rs = pst.executeQuery()) {
+                        if (rs.next() && rs.getInt(1) > 0) {
+                            // Doctor is scheduled, now check for conflicting appointments
+                            String checkAppointmentSql = "SELECT COUNT(*) FROM Appointment WHERE doctor_id = ? AND appointment_date = ? AND appointment_time = ? AND appointment_status NOT IN ('Cancelled', 'No-Show')";
+                            try (PreparedStatement pst2 = con.prepareStatement(checkAppointmentSql)) {
+                                pst2.setInt(1, doctorId);
+                                pst2.setDate(2, java.sql.Date.valueOf(appointmentDate));
+                                pst2.setTime(3, java.sql.Time.valueOf(appointmentTime + ":00"));
+                                try (ResultSet rs2 = pst2.executeQuery()) {
+                                    if (rs2.next() && rs2.getInt(1) == 0) {
+                                        isAvailable = true;
+                                    }
+                                }
                             }
                         }
                     }
+                }
+
+                if (!isAvailable) {
+                    session.setAttribute("bookingError", "The selected time slot is no longer available. Please choose another time.");
+                    response.sendRedirect(request.getContextPath() + "/patient/doctor-profile?id=" + doctorId);
+                    return;
                 }
 
                 // If available, proceed with booking

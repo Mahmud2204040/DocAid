@@ -27,7 +27,6 @@
         }
         .sidebar{width:240px;min-height:100vh;background:var(--sidebar-bg);position:fixed;left:0;top:0;}
         .sidebar .brand{color:var(--sidebar-text);font-size:1.5rem;font-weight:700;display:flex;align-items:center;padding:1rem 1.5rem;border-bottom:1px solid rgba(255,255,255,.1);}
-        .sidebar .brand::before{content:"DA";background:var(--accent-cyan);color:#fff;width:32px;height:32px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;margin-right:.75rem;}
         .sidebar .nav{padding:1rem 0;}
         .sidebar .nav-link{color:var(--sidebar-text);padding:.75rem 1.5rem;display:flex;align-items:center;border-left:3px solid transparent;transition:.2s;}
         .sidebar .nav-link:hover, .sidebar .nav-link.active{background:var(--sidebar-hover);color:#fff;border-left-color:var(--accent-cyan);}
@@ -36,7 +35,7 @@
         .profile-header{background:#fff;padding:2rem;margin:2rem;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.1);}
         .profile-title{font-size:2rem;font-weight:700;color:#1e293b;margin-bottom:2rem;border-bottom:2px solid #e2e8f0;padding-bottom:1rem;}
         .profile-card{display:flex;align-items:center;margin-bottom:2rem;}
-        .profile-avatar{width:80px;height:80px;border-radius:50%;background:var(--accent-cyan);color:#fff;display:flex;align-items-center;justify-content:center;font-size:24px;font-weight:600;margin-right:1.5rem;border:3px solid #e2e8f0;}
+        .profile-avatar{width:80px;height:80px;border-radius:50%;background:var(--accent-cyan);color:#fff;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:600;margin-right:1.5rem;border:3px solid #e2e8f0;}
         .profile-name{font-size:1.5rem;font-weight:600;color:#1e293b;margin-bottom:.25rem;}
         .profile-specialty{color:#64748b;font-size:1rem;margin-bottom:.75rem;}
         .rating-stars{display:flex;gap:.25rem;}
@@ -69,10 +68,14 @@
                         <h2 class="profile-name">Dr. ${doctorProfile.firstName} ${doctorProfile.lastName}</h2>
                         <p class="profile-specialty">${not empty doctorProfile.specialty ? doctorProfile.specialty : 'N/A'}</p>
                         <div class="rating-stars">
-                            <!-- Rating would be dynamically generated -->
-                            <i class="fas fa-star"></i><i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i><i class="fas fa-star"></i>
-                            <i class="far fa-star"></i>
+                            <c:set var="rating" value="${doctorProfile.rating}" />
+                            <c:set var="fullStars" value="${Math.round(rating)}" />
+                            <c:forEach begin="1" end="${fullStars}">
+                                <i class="fas fa-star"></i>
+                            </c:forEach>
+                            <c:forEach begin="1" end="${5 - fullStars}">
+                                <i class="far fa-star"></i>
+                            </c:forEach>
                         </div>
                     </div>
                 </div>
@@ -93,8 +96,12 @@
                         <span class="detail-value">${not empty doctorProfile.specialty ? doctorProfile.specialty : 'N/A'}</span>
                     </div>
                     <div>
-                        <span class="detail-label">Contact Phone:</span>
-                        <span class="detail-value">${not empty doctorProfile.phone ? doctorProfile.phone : 'N/A'}</span>
+                        <span class="detail-label">Primary Contact:</span>
+                        <span class="detail-value">${not empty primaryContact ? primaryContact : 'N/A'}</span>
+                    </div>
+                    <div>
+                        <span class="detail-label">Appointment Contact:</span>
+                        <span class="detail-value">${not empty appointmentContact ? appointmentContact : 'N/A'}</span>
                     </div>
                     <div>
                         <span class="detail-label">Address:</span>
@@ -106,7 +113,7 @@
                     </div>
                     <div>
                         <span class="detail-label">Consultation Fee:</span>
-                        <span class="detail-value">$${doctorProfile.fee}</span>
+                        <span class="detail-value">BDT ${doctorProfile.fee}</span>
                     </div>
                     <div>
                         <span class="detail-label">License Number:</span>

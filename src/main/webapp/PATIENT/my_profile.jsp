@@ -677,7 +677,7 @@
                     <i class="fas fa-edit"></i>
                     Edit Profile
                 </a>
-                <a href="view_appointment.jsp" class="action-btn">
+                <a href="${pageContext.request.contextPath}/patient/appointments" class="action-btn">
                     <i class="fas fa-calendar"></i>
                     My Appointments
                 </a>
@@ -718,15 +718,7 @@
                         <div class="stat-label">Completed Visits</div>
                     </div>
                 </div>
-                <div class="col-md-4">
-                    <div class="stat-card joined animate__animated animate__fadeInUp animate__delay-2s">
-                        <div class="stat-icon joined">
-                            <i class="fas fa-user-plus"></i>
-                        </div>
-                        <div class="stat-number" style="font-size: 1.5rem;"><c:out value="${patient.createdAt}" /></div>
-                        <div class="stat-label">Joined Date</div>
-                    </div>
-                </div>
+
             </div>
         </div>
     </div>
@@ -866,8 +858,8 @@
                         </div>
                     </div>
                 </a>
-                
-                <a href="view_appointment.jsp" class="quick-action-card appointments animate__animated animate__fadeInUp animate__delay-1s">
+
+                <a href="${pageContext.request.contextPath}/patient/appointments" class="quick-action-card appointments animate__animated animate__fadeInUp animate__delay-1s">
                     <div class="quick-action-header">
                         <div class="quick-action-icon appointments">
                             <i class="fas fa-calendar-check"></i>
@@ -878,8 +870,8 @@
                         </div>
                     </div>
                 </a>
-                
-                <a href="past_visits.jsp" class="quick-action-card history animate__animated animate__fadeInUp animate__delay-2s">
+
+                <a href="${pageContext.request.contextPath}/patient/past-visits" class="quick-action-card history animate__animated animate__fadeInUp animate__delay-2s">
                     <div class="quick-action-header">
                         <div class="quick-action-icon history">
                             <i class="fas fa-history"></i>
@@ -1024,6 +1016,10 @@
             tooltipTriggerList.map(function (tooltipTriggerEl) {
                 return new bootstrap.Tooltip(tooltipTriggerEl);
             });
+        }
+    </script>
+</body>
+</html>
         }
     </script>
 </body>

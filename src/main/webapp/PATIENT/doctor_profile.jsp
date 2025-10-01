@@ -112,8 +112,64 @@
                                             <c:forEach var="slot" items="${schedule}">
                                                 <tr>
                                                     <td><c:out value="${slot.day}"/></td>
-                                                    <td><c:out value="${slot.startTime}"/></td>
-                                                    <td><c:out value="${slot.endTime}"/></td>
+                                                    <td>
+                                                        <c:set var="startTime" value="${slot.startTime}" />
+                                                        <c:if test="${not empty startTime}">
+                                                            <%
+                                                                Object startTimeObj = pageContext.getAttribute("startTime");
+                                                                String formattedStartTime = "";
+                                                                if (startTimeObj != null) {
+                                                                    try {
+                                                                        java.sql.Time sqlTime = (java.sql.Time) startTimeObj;
+                                                                        java.text.SimpleDateFormat formatter = new java.text.SimpleDateFormat("hh:mm a");
+                                                                        formattedStartTime = formatter.format(sqlTime);
+                                                                    } catch (Exception e) {
+                                                                        // If it's a string, try to parse it
+                                                                        String timeStr = startTimeObj.toString();
+                                                                        try {
+                                                                            java.text.SimpleDateFormat parser = new java.text.SimpleDateFormat("HH:mm:ss");
+                                                                            java.util.Date parsedTime = parser.parse(timeStr);
+                                                                            java.text.SimpleDateFormat formatter = new java.text.SimpleDateFormat("hh:mm a");
+                                                                            formattedStartTime = formatter.format(parsedTime);
+                                                                        } catch (java.text.ParseException pe) {
+                                                                            formattedStartTime = timeStr; // fallback to original string
+                                                                        }
+                                                                    }
+                                                                }
+                                                                pageContext.setAttribute("formattedStartTime", formattedStartTime);
+                                                            %>
+                                                            <c:out value="${formattedStartTime}"/>
+                                                        </c:if>
+                                                    </td>
+                                                    <td>
+                                                        <c:set var="endTime" value="${slot.endTime}" />
+                                                        <c:if test="${not empty endTime}">
+                                                            <%
+                                                                Object endTimeObj = pageContext.getAttribute("endTime");
+                                                                String formattedEndTime = "";
+                                                                if (endTimeObj != null) {
+                                                                    try {
+                                                                        java.sql.Time sqlTime = (java.sql.Time) endTimeObj;
+                                                                        java.text.SimpleDateFormat formatter = new java.text.SimpleDateFormat("hh:mm a");
+                                                                        formattedEndTime = formatter.format(sqlTime);
+                                                                    } catch (Exception e) {
+                                                                        // If it's a string, try to parse it
+                                                                        String timeStr = endTimeObj.toString();
+                                                                        try {
+                                                                            java.text.SimpleDateFormat parser = new java.text.SimpleDateFormat("HH:mm:ss");
+                                                                            java.util.Date parsedTime = parser.parse(timeStr);
+                                                                            java.text.SimpleDateFormat formatter = new java.text.SimpleDateFormat("hh:mm a");
+                                                                            formattedEndTime = formatter.format(parsedTime);
+                                                                        } catch (java.text.ParseException pe) {
+                                                                            formattedEndTime = timeStr; // fallback to original string
+                                                                        }
+                                                                    }
+                                                                }
+                                                                pageContext.setAttribute("formattedEndTime", formattedEndTime);
+                                                            %>
+                                                            <c:out value="${formattedEndTime}"/>
+                                                        </c:if>
+                                                    </td>
                                                 </tr>
                                             </c:forEach>
                                         </tbody>
@@ -176,7 +232,7 @@
                 <div class="card mt-3">
                     <div class="card-header">Consultation Fee</div>
                     <div class="card-body">
-                        <h4>$<fmt:formatNumber value="${doctor.fee}" type="currency" currencySymbol="" maxFractionDigits="2"/></h4>
+                        <h4>BDT <fmt:formatNumber value="${doctor.fee}" type="currency" currencySymbol="" maxFractionDigits="2"/></h4>
                     </div>
                 </div>
             </div>

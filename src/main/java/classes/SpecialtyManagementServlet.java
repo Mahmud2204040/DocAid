@@ -8,6 +8,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 
@@ -23,7 +26,15 @@ public class SpecialtyManagementServlet extends HttpServlet {
         }
 
         try {
-            List<Admin.Specialty> specialtyList = new Admin(1,1,"dummy").getAllSpecialties();
+            HttpSession session = request.getSession(false);
+            Integer userId = (Integer) session.getAttribute("user_id");
+            String email = (String) session.getAttribute("email");
+
+            if (userId == null) {
+                throw new ServletException("Admin ID not found for the logged-in user.");
+            }
+
+            List<Admin.Specialty> specialtyList = new Admin(userId, email).getAllSpecialties();
             request.setAttribute("specialtyList", specialtyList);
             RequestDispatcher dispatcher = request.getRequestDispatcher("/ADMIN/specialties.jsp");
             dispatcher.forward(request, response);
@@ -40,24 +51,37 @@ public class SpecialtyManagementServlet extends HttpServlet {
         }
 
         String action = request.getParameter("action");
+        HttpSession session = request.getSession(false);
+        Integer userId = (Integer) session.getAttribute("user_id");
+        String email = (String) session.getAttribute("email");
 
-        try {
+        if (userId == null) {
+            throw new ServletException("Admin ID not found for the logged-in user.");
+        }
+
+        Admin admin = new Admin(userId, email);
+
+        try { // New try block for specialty management operations
             switch (action) {
                 case "add":
-                    new Admin(1,1,"dummy").createSpecialty(request.getParameter("specialtyName"));
+                    admin.createSpecialty(request.getParameter("specialtyName"));
                     break;
                 case "update":
                     int specialtyIdUpdate = Integer.parseInt(request.getParameter("specialtyId"));
                     String newSpecialtyName = request.getParameter("newSpecialtyName");
-                    new Admin(1,1,"dummy").updateSpecialty(specialtyIdUpdate, newSpecialtyName);
+                    admin.updateSpecialty(specialtyIdUpdate, newSpecialtyName);
                     break;
                 case "delete":
                     int specialtyIdDelete = Integer.parseInt(request.getParameter("specialtyId"));
-                    new Admin(1,1,"dummy").deleteSpecialty(specialtyIdDelete);
+                    admin.deleteSpecialty(specialtyIdDelete);
                     break;
             }
+        } catch (SQLException e) {
+            throw new ServletException("Database error during specialty management operation.", e);
+        } catch (NumberFormatException e) {
+            throw new ServletException("Invalid specialty ID format.", e);
         } catch (Exception e) {
-            // handle error
+            throw new ServletException("An unexpected error occurred during specialty management.", e);
         }
         response.sendRedirect(request.getContextPath() + "/admin/specialties");
     }

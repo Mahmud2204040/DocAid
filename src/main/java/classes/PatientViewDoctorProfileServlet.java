@@ -19,6 +19,7 @@ import java.util.Map;
 import java.util.HashMap;
 import classes.DbConnector;
 import classes.Doctor;
+import classes.DoctorService;
 
 @WebServlet("/patient/doctor-profile")
 public class PatientViewDoctorProfileServlet extends HttpServlet {
@@ -37,7 +38,13 @@ public class PatientViewDoctorProfileServlet extends HttpServlet {
             return;
         }
 
-        int doctorId = Integer.parseInt(doctorIdStr);
+        int doctorId;
+        try {
+            doctorId = Integer.parseInt(doctorIdStr);
+        } catch (NumberFormatException e) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid Doctor ID format.");
+            return;
+        }
 
         try (Connection con = DbConnector.getConnection()) {
             // 1. Fetch Doctor Details from the view
@@ -83,13 +90,11 @@ public class PatientViewDoctorProfileServlet extends HttpServlet {
                     doctor.setBio(rs.getString("bio"));
                     doctor.setFee(rs.getBigDecimal("fee"));
                     doctor.setAddress(rs.getString("address"));
-                    doctor.setPhone(rs.getString("phone"));
+                    doctor.setPhone(rs.getString("appointment_contact"));
                     doctor.setSpecialtyName(rs.getString("specialty"));
-                    doctor.setHospitalName(rs.getString("hospital_name"));
-                    doctor.setVerified(rs.getBoolean("is_verified"));
+                                                            doctor.setHospitalName(rs.getString("hospital_name"));
                     doctor.setRating(rs.getDouble("rating"));
                     doctor.setReviewCount(rs.getInt("review_count"));
-                    doctor.setAvailableForPatients(rs.getBoolean("is_available_for_patients"));
                     doctor.setEmail(rs.getString("email"));
                     return doctor;
                 }

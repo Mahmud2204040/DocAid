@@ -23,18 +23,11 @@ public class HospitalFeedbackServlet extends HttpServlet {
             return;
         }
 
-        Object hospitalIdAttr = session.getAttribute("hospital_id");
-        if (hospitalIdAttr == null) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "User session is missing 'hospital_id'. Please ensure the login process sets this attribute.");
-            return;
-        }
-
         try {
-            int hospitalId = (Integer) hospitalIdAttr;
             int userId = (Integer) session.getAttribute("user_id");
             String email = (String) session.getAttribute("email");
 
-            Hospital hospital = new Hospital(hospitalId, userId, email);
+            Hospital hospital = new Hospital(userId, email);
             List<Hospital.PatientFeedback> feedback = hospital.getFullPatientFeedback();
 
             request.setAttribute("feedbackList", feedback);

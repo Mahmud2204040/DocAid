@@ -36,12 +36,12 @@ public class SearchHospitalDetails {
             }
 
             StringBuilder sql = new StringBuilder();
-            sql.append("SELECT h.*, u.email");
+            sql.append("SELECT h.*, u.email, u.user_id");
             if (userLat != null && userLng != null) {
                 sql.append(", (6371 * acos(cos(radians(?)) * cos(radians(h.latitude)) * cos(radians(h.longitude) - radians(?)) + sin(radians(?)) * sin(radians(h.latitude)))) AS distance");
             }
             sql.append(" FROM Hospital h ");
-            sql.append("JOIN Users u ON h.user_id = u.user_id ");
+            sql.append("JOIN Users u ON h.hospital_id = u.user_id ");
             sql.append(whereClause);
 
             sql.append(" ORDER BY ");
