@@ -34,7 +34,7 @@
                         <th>Test Name</th>
                         <th>Description</th>
                         <th>Price</th>
-                        <th>Status</th>
+
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -43,32 +43,24 @@
                         <tr>
                             <td><c:out value="${test.testName}"/></td>
                             <td><c:out value="${test.description}"/></td>
-                            <td>$<c:out value="${String.format('%.2f', test.price)}"/></td>
-                            <td>
-                                <c:if test="${test.active}">
-                                    <span class="badge bg-success">Active</span>
-                                </c:if>
-                                <c:if test="${!test.active}">
-                                    <span class="badge bg-secondary">Inactive</span>
-                                </c:if>
-                            </td>
+                            <td>BDT <c:out value="${String.format('%.2f', test.price)}"/></td>
+
                             <td>
                                 <button type="button" class="btn btn-sm btn-warning edit-btn" 
                                         data-bs-toggle="modal" data-bs-target="#editTestModal"
-                                        data-test-id="${test.testId}"
                                         data-test-name="${test.testName}"
                                         data-test-price="${test.price}"
+
                                         data-test-description="${test.description}">Edit</button>
                                 <button type="button" class="btn btn-sm btn-danger delete-btn"
                                         data-bs-toggle="modal" data-bs-target="#deleteTestModal"
-                                        data-test-id="${test.testId}"
                                         data-test-name="${test.testName}">Delete</button>
                             </td>
                         </tr>
                     </c:forEach>
                     <c:if test="${empty testList}">
                         <tr>
-                            <td colspan="5" class="text-center">No medical tests found.</td>
+                            <td colspan="4" class="text-center">No medical tests found.</td>
                         </tr>
                     </c:if>
                 </tbody>
@@ -122,7 +114,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <input type="hidden" id="edit_test_id" name="test_id">
+                    <input type="hidden" id="original_test_name" name="original_test_name">
                     <div class="mb-3">
                         <label for="edit_test_name" class="form-label">Test Name</label>
                         <input type="text" class="form-control" id="edit_test_name" name="test_name" required>
@@ -135,6 +127,7 @@
                         <label for="edit_description" class="form-label">Description</label>
                         <textarea class="form-control" id="edit_description" name="description" rows="3"></textarea>
                     </div>
+
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -155,7 +148,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <input type="hidden" id="delete_test_id" name="test_id">
+                    <input type="hidden" id="delete_test_name_hidden" name="test_name">
                     <input type="hidden" name="action" value="delete">
                     <p>Are you sure you want to delete the test: <strong id="delete_test_name"></strong>?</p>
                     <p class="text-danger">This action cannot be undone.</p>
@@ -176,14 +169,15 @@ document.addEventListener('DOMContentLoaded', function () {
     if(editTestModal) {
         editTestModal.addEventListener('show.bs.modal', function (event) {
             var button = event.relatedTarget;
-            var testId = button.getAttribute('data-test-id');
             var testName = button.getAttribute('data-test-name');
             var testPrice = button.getAttribute('data-test-price');
             var testDescription = button.getAttribute('data-test-description');
-            editTestModal.querySelector('#edit_test_id').value = testId;
+            var testActive = button.getAttribute('data-test-active');
+            editTestModal.querySelector('#original_test_name').value = testName;
             editTestModal.querySelector('#edit_test_name').value = testName;
             editTestModal.querySelector('#edit_price').value = testPrice;
             editTestModal.querySelector('#edit_description').value = testDescription;
+
         });
     }
 
@@ -192,9 +186,8 @@ document.addEventListener('DOMContentLoaded', function () {
     if(deleteTestModal) {
         deleteTestModal.addEventListener('show.bs.modal', function (event) {
             var button = event.relatedTarget;
-            var testId = button.getAttribute('data-test-id');
             var testName = button.getAttribute('data-test-name');
-            deleteTestModal.querySelector('#delete_test_id').value = testId;
+            deleteTestModal.querySelector('#delete_test_name_hidden').value = testName;
             deleteTestModal.querySelector('#delete_test_name').textContent = testName;
         });
     }

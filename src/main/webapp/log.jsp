@@ -396,71 +396,7 @@
             color: var(--gray-600);
         }
 
-        /* Form Options */
-        .form-options {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin: 2rem 0;
-        }
 
-        .checkbox-wrapper {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            cursor: pointer;
-        }
-
-        .checkbox-wrapper input[type="checkbox"] {
-            display: none;
-        }
-
-        .checkbox-custom {
-            width: 18px;
-            height: 18px;
-            border: 2px solid var(--gray-300);
-            border-radius: 4px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: var(--white);
-            transition: all 0.3s ease;
-        }
-
-        .checkbox-wrapper input[type="checkbox"]:checked + .checkbox-custom {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-            border-color: var(--primary);
-            color: white;
-        }
-
-        .checkbox-custom i {
-            font-size: 0.75rem;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .checkbox-wrapper input[type="checkbox"]:checked + .checkbox-custom i {
-            opacity: 1;
-        }
-
-        .checkbox-label {
-            font-size: 0.875rem;
-            color: var(--gray-600);
-            font-weight: 500;
-        }
-
-        .forgot-link {
-            color: var(--primary);
-            text-decoration: none;
-            font-size: 0.875rem;
-            font-weight: 600;
-            transition: color 0.3s ease;
-        }
-
-        .forgot-link:hover {
-            color: var(--primary-dark);
-            text-decoration: underline;
-        }
 
         /* Submit Button */
         .submit-btn {
@@ -635,11 +571,7 @@
                 font-size: 3rem;
             }
             
-            .form-options {
-                flex-direction: column;
-                gap: 1rem;
-                align-items: flex-start;
-            }
+
         }
 
         @media (max-width: 576px) {
@@ -813,17 +745,8 @@
                         <div class="invalid-feedback"></div>
                     </div>
 
-                    <!-- Remember Me & Forgot Password -->
-                    <div class="form-options">
-                        <label class="checkbox-wrapper">
-                            <input type="checkbox" id="remember_me" name="remember_me">
-                            <div class="checkbox-custom">
-                                <i class="fas fa-check"></i>
-                            </div>
-                            <span class="checkbox-label">Remember me</span>
-                        </label>
-                        <a href="#" class="forgot-link">Forgot password?</a>
-                    </div>
+                    <!-- Spacer -->
+                    <div style="height: 2rem;"></div>
 
                     <!-- Submit Button -->
                     <button type="submit" class="submit-btn" id="submitBtn">
@@ -948,18 +871,6 @@
                 form.querySelector('input[type="email"]').focus();
             }, 500);
 
-            // Checkbox Animation
-            const rememberCheckbox = document.getElementById('remember_me');
-            rememberCheckbox.addEventListener('change', () => {
-                const indicator = rememberCheckbox.nextElementSibling;
-                if (rememberCheckbox.checked) {
-                    indicator.style.transform = 'scale(1.1)';
-                    setTimeout(() => {
-                        indicator.style.transform = 'scale(1)';
-                    }, 150);
-                }
-            });
-
             // Prevent Form Resubmission
             if (window.history.replaceState) {
                 window.history.replaceState(null, null, window.location.href);
@@ -975,7 +886,7 @@
 
         // Staggered Animation on Load
         window.addEventListener('load', () => {
-            const animationElements = document.querySelectorAll('.form-group, .form-options, .submit-btn, .signup-section');
+            const animationElements = document.querySelectorAll('.form-group, .submit-btn, .signup-section');
             animationElements.forEach((el, index) => {
                 el.style.opacity = '0';
                 el.style.transform = 'translateY(20px)';

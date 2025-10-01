@@ -8,6 +8,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 
@@ -25,7 +28,14 @@ public class UserManagementServlet extends HttpServlet {
 
         String userTypeFilter = request.getParameter("userType");
         try {
-            List<Admin.UserDetails> userList = new Admin(1,1,"dummy").getAllUsers(userTypeFilter);
+            Integer userId = (Integer) session.getAttribute("user_id");
+            String email = (String) session.getAttribute("email");
+
+            if (userId == null) {
+                throw new ServletException("Admin ID not found for the logged-in user.");
+            }
+
+            List<Admin.UserDetails> userList = new Admin(userId, email).getAllUsers(userTypeFilter);
             request.setAttribute("userList", userList);
             request.setAttribute("currentUserType", userTypeFilter);
             RequestDispatcher dispatcher = request.getRequestDispatcher("/ADMIN/users.jsp");
@@ -46,8 +56,17 @@ public class UserManagementServlet extends HttpServlet {
         String action = request.getParameter("action");
         if ("delete".equals(action)) {
             try {
+                Integer userIdFromSession = (Integer) session.getAttribute("user_id");
+                String email = (String) session.getAttribute("email");
+
+                if (userIdFromSession == null) {
+                    throw new ServletException("Admin ID not found for the logged-in user.");
+                }
+
+                Admin admin = new Admin(userIdFromSession, email);
+
                 int userId = Integer.parseInt(request.getParameter("userId"));
-                new Admin(1,1,"dummy").deleteUser(userId);
+                admin.deleteUser(userId);
                 session.setAttribute("message", "User successfully deleted.");
                 session.setAttribute("messageClass", "alert-success");
             } catch (Exception e) {

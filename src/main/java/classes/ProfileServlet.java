@@ -39,7 +39,13 @@ public class ProfileServlet extends HttpServlet {
                 patient.loadFromDatabase(con);
                 logger.log(Level.INFO, "Patient data loaded for user_id: " + userId);
             } catch (SQLException e) {
-                logger.log(Level.INFO, "No existing patient record for user_id: " + userId + ". A new one can be created via the update profile page.");
+                logger.log(Level.INFO, "No existing patient record for user_id: " + userId + ". Creating a default patient object.");
+                patient.setFirstName("New");
+                patient.setLastName("User");
+                patient.setAddress("Not specified");
+                patient.setBloodType("Not specified");
+                patient.setGender("Other");
+                patient.setDateOfBirth(new java.sql.Date(System.currentTimeMillis()));
             }
 
             // Fetch other details not in the Patient object
@@ -64,7 +70,7 @@ public class ProfileServlet extends HttpServlet {
                 "SELECT COUNT(*) as total, " +
                 "SUM(CASE WHEN appointment_status = 'Completed' THEN 1 ELSE 0 END) as completed, " +
                 "MAX(appointment_date) as last_visit " +
-                "FROM Appointment WHERE patient_id = (SELECT patient_id FROM Patient WHERE user_id = ?)"
+                "FROM Appointment WHERE patient_id = ?"
             )) {
                 pst.setInt(1, userId);
                 try (ResultSet rs = pst.executeQuery()) {

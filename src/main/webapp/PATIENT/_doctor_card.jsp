@@ -50,7 +50,7 @@
 
                 
                 <div class="col-md-5 doctor-meta">
-                    <p class="fee"><strong>Fee:</strong> $<fmt:formatNumber value="${doctor.fee}" maxFractionDigits="0" /></p>
+                    <p class="fee"><strong>Fee:</strong> BDT <fmt:formatNumber value="${doctor.fee}" maxFractionDigits="0" /></p>
                     <p class="experience"><strong>Experience:</strong> <c:out value="${doctor.expYears}"/> years</p>                    
                 </div>
             </div>

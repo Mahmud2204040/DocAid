@@ -46,6 +46,7 @@
                     <tr>
                         <th>Doctor Name</th>
                         <th>Specialty</th>
+                        <th>License Number</th>
                         <th>Current Hospital</th>
                         <th>Action</th>
                     </tr>
@@ -55,6 +56,7 @@
                         <tr>
                             <td><c:out value="${doc.fullName}"/></td>
                             <td><c:out value="${doc.specialty}"/></td>
+                            <td><c:out value="${doc.licenseNumber}"/></td>
                             <td><c:out value="${not empty doc.currentHospitalName ? doc.currentHospitalName : 'Unaffiliated'}"/></td>
                             <td>
                                 <form action="<%= request.getContextPath() %>/hospital/send-request" method="POST" class="d-inline">

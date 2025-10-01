@@ -18,7 +18,7 @@ public class User {
     private String email;
     private String password;
     private String role;
-    private String authKey;
+
 
     private static final Logger logger = Logger.getLogger(User.class.getName());
 
@@ -42,8 +42,7 @@ public class User {
     public String getRole() { return role; }
     public void setRole(String role) { this.role = role; }
 
-    public String getAuth_key() { return authKey; }
-    public void setAuth_key(String authKey) { this.authKey = authKey; }
+
 
     /**
      * Authenticates the user using email and password credentials.
@@ -74,8 +73,7 @@ public class User {
                     if (storedPassword.equals(hashedPassword)) {
                         this.setId(rs.getInt("user_id"));
                         this.setRole(rs.getString("user_type"));
-                        this.authKey = generateAuthKey();  // Generate new auth key on successful login
-                        updateAuthKey(con);  // Save to database
+
                         return true;
                     }
                 }
@@ -87,49 +85,9 @@ public class User {
         return false;
     }
 
-    /**
-     * Authenticates the user using a cookie-based auth key.
-     * On success, sets ID and role.
-     *
-     * @param con Active database connection.
-     * @return true if authentication succeeds, false otherwise.
-     * @throws SQLException if a database error occurs.
-     */
-    public boolean authenticateByCookie(Connection con) throws SQLException {
-        String query = "SELECT user_id, user_type FROM Users WHERE auth_key = ?";
-        try (PreparedStatement pstmt = con.prepareStatement(query)) {
-            pstmt.setString(1, this.authKey);
-            try (ResultSet rs = pstmt.executeQuery()) {
-                if (rs.next()) {
-                    this.setId(rs.getInt("user_id"));
-                    this.setRole(rs.getString("user_type"));
-                    return true;
-                }
-            }
-        } catch (SQLException e) {
-            logger.log(Level.SEVERE, "Error during cookie authentication", e);
-            throw e;  // Propagate for caller handling
-        }
-        return false;
-    }
 
-    // Helper: Generate a secure auth key
-    private String generateAuthKey() {
-        return UUID.randomUUID().toString();
-    }
 
-    // Helper: Update auth_key in the database
-    private void updateAuthKey(Connection con) throws SQLException {
-        String query = "UPDATE Users SET auth_key = ? WHERE user_id = ?";
-        try (PreparedStatement pstmt = con.prepareStatement(query)) {
-            pstmt.setString(1, this.authKey);
-            pstmt.setInt(2, this.id);
-            pstmt.executeUpdate();
-        } catch (SQLException e) {
-            logger.log(Level.SEVERE, "Error updating auth_key", e);
-            throw e;  // Propagate error for handling in caller
-        }
-    }
+
 
     /**
      * Placeholder method to load role-specific details from the database.

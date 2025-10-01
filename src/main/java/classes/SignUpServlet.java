@@ -102,7 +102,7 @@ public class SignUpServlet extends HttpServlet {
 
             switch (userType) {
                 case "Doctor":
-                    sqlRole = "INSERT INTO Doctor (user_id, first_name, last_name, gender, license_number, exp_years, bio, fee, address, latitude, longitude, specialty_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                    sqlRole = "INSERT INTO Doctor (doctor_id, first_name, last_name, gender, license_number, exp_years, bio, fee, address, latitude, longitude, specialty_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
                     pstmtRole = con.prepareStatement(sqlRole);
                     pstmtRole.setLong(1, userId);
                     pstmtRole.setString(2, request.getParameter("doctor_first_name"));
@@ -164,7 +164,7 @@ public class SignUpServlet extends HttpServlet {
                     break;
 
                 case "Patient":
-                    sqlRole = "INSERT INTO Patient (user_id, first_name, last_name, gender, date_of_birth, blood_type, address, latitude, longitude) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                    sqlRole = "INSERT INTO Patient (patient_id, first_name, last_name, gender, date_of_birth, blood_type, address, latitude, longitude) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
                     pstmtRole = con.prepareStatement(sqlRole);
                     pstmtRole.setLong(1, userId);
                     pstmtRole.setString(2, request.getParameter("patient_first_name"));
@@ -197,7 +197,7 @@ public class SignUpServlet extends HttpServlet {
                     break;
 
                 case "Hospital":
-                    sqlRole = "INSERT INTO Hospital (user_id, hospital_name, hospital_bio, address, website, latitude, longitude) VALUES (?, ?, ?, ?, ?, ?, ?)";
+                    sqlRole = "INSERT INTO Hospital (hospital_id, hospital_name, hospital_bio, address, website, latitude, longitude) VALUES (?, ?, ?, ?, ?, ?, ?)";
                     pstmtRole = con.prepareStatement(sqlRole);
                     pstmtRole.setLong(1, userId);
                     pstmtRole.setString(2, request.getParameter("hospital_name"));

@@ -31,17 +31,7 @@ public class DoctorAffiliationServlet extends HttpServlet {
             int userId = (Integer) session.getAttribute("user_id");
             Doctor doctor = new Doctor();
             doctor.setId(userId);
-
-            // We need the doctor_id to fetch requests
-            try (Connection conn = DbConnector.getConnection();
-                 PreparedStatement pstmt = conn.prepareStatement("SELECT doctor_id FROM Doctor WHERE user_id = ?")) {
-                pstmt.setInt(1, userId);
-                try (ResultSet rs = pstmt.executeQuery()) {
-                    if (rs.next()) {
-                        doctor.setDoctorId(rs.getInt("doctor_id"));
-                    }
-                }
-            }
+            doctor.setDoctorId(userId);
 
             List<Doctor.AffiliationRequestDetails> requests = doctor.getPendingAffiliationRequests();
             request.setAttribute("requestList", requests);
@@ -71,16 +61,7 @@ public class DoctorAffiliationServlet extends HttpServlet {
             Doctor doctor = new Doctor();
             doctor.setId(userId);
             
-            // Get doctor_id for operations
-            try (Connection conn = DbConnector.getConnection();
-                 PreparedStatement pstmt = conn.prepareStatement("SELECT doctor_id FROM Doctor WHERE user_id = ?")) {
-                pstmt.setInt(1, userId);
-                try (ResultSet rs = pstmt.executeQuery()) {
-                    if (rs.next()) {
-                        doctor.setDoctorId(rs.getInt("doctor_id"));
-                    }
-                }
-            }
+            doctor.setDoctorId(userId);
 
             boolean success = false;
             String message = "";

@@ -12,6 +12,7 @@
         .rating {
             display: inline-block;
             border: none;
+            direction: rtl;
         }
         .rating > input {
             display: none;

@@ -8,7 +8,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.List;
 
 @WebServlet("/admin/dashboard")
 public class AdminDashboardServlet extends HttpServlet {
@@ -29,9 +33,24 @@ public class AdminDashboardServlet extends HttpServlet {
         }
 
         try {
-            Admin admin = new Admin(1, (Integer) session.getAttribute("user_id"), (String) session.getAttribute("email"));
+            int userId = (Integer) session.getAttribute("user_id");
+            String email = (String) session.getAttribute("email");
+            int adminId = userId;
+
+            if (adminId == -1) {
+                throw new ServletException("Admin ID not found for the logged-in user.");
+            }
+
+            Admin admin = new Admin(adminId, email);
+            
+            // Fetch dashboard analytics
             Admin.DashboardAnalytics analytics = admin.getDashboardAnalytics();
             request.setAttribute("analytics", analytics);
+
+            // Fetch recent activity
+            List<Admin.UserDetails> recentActivityList = admin.getRecentActivity();
+            request.setAttribute("recentActivityList", recentActivityList);
+
             RequestDispatcher dispatcher = request.getRequestDispatcher("/ADMIN/index.jsp");
             dispatcher.forward(request, response);
         } catch (SQLException e) {

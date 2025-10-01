@@ -25,8 +25,6 @@ public class Patient extends User {
     private String phone;
     private double latitude;
     private double longitude;
-    private Timestamp createdAt;
-    private Timestamp updatedAt;
 
     private static final Logger logger = Logger.getLogger(Patient.class.getName());
 
@@ -101,12 +99,6 @@ public class Patient extends User {
     public double getLongitude() { return longitude; }
     public void setLongitude(double longitude) { this.longitude = longitude; }
 
-    public Timestamp getCreatedAt() { return createdAt; }
-    public void setCreatedAt(Timestamp createdAt) { this.createdAt = createdAt; }
-
-    public Timestamp getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(Timestamp updatedAt) { this.updatedAt = updatedAt; }
-
     /**
      * Saves the Patient details to the database, linking to the base User's ID.
      *
@@ -114,10 +106,11 @@ public class Patient extends User {
      * @throws SQLException if a database error occurs.
      */
     public void saveToDatabase(Connection con) throws SQLException {
-        String query = "INSERT INTO Patient (user_id, first_name, last_name, gender, date_of_birth, blood_type, address, phone, latitude, longitude) " +
-                       "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String query = "INSERT INTO Patient (patient_id, first_name, last_name, gender, date_of_birth, blood_type, address, latitude, longitude) " +
+                       "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try (PreparedStatement pstmt = con.prepareStatement(query)) {
             pstmt.setInt(1, this.getId());  // Link to base User ID
+            this.setPatientId(this.getId());
             pstmt.setString(2, this.firstName);
             pstmt.setString(3, this.lastName);
             pstmt.setString(4, this.gender);
@@ -128,9 +121,8 @@ public class Patient extends User {
                 pstmt.setNull(6, java.sql.Types.VARCHAR);
             }
             pstmt.setString(7, this.address);
-            pstmt.setString(8, this.phone);
-            pstmt.setDouble(9, this.latitude);
-            pstmt.setDouble(10, this.longitude);
+            pstmt.setDouble(8, this.latitude);
+            pstmt.setDouble(9, this.longitude);
             pstmt.executeUpdate();
         } catch (SQLException e) {
             logger.log(Level.SEVERE, "Error saving Patient to database", e);
@@ -145,7 +137,7 @@ public class Patient extends User {
      * @throws SQLException if a database error occurs or no record found.
      */
     public void loadFromDatabase(Connection con) throws SQLException {
-        String query = "SELECT * FROM Patient WHERE user_id = ?";
+        String query = "SELECT * FROM Patient WHERE patient_id = ?";
         try (PreparedStatement pstmt = con.prepareStatement(query)) {
             pstmt.setInt(1, this.getId());
             try (ResultSet rs = pstmt.executeQuery()) {
@@ -159,8 +151,6 @@ public class Patient extends User {
                     this.address = rs.getString("address");
                     this.latitude = rs.getDouble("latitude");
                     this.longitude = rs.getDouble("longitude");
-                    this.createdAt = rs.getTimestamp("created_at");
-                    this.updatedAt = rs.getTimestamp("updated_at");
                 } else {
                     throw new SQLException("No Patient record found for user_id: " + this.getId());
                 }

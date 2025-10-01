@@ -43,7 +43,7 @@ public class PastVisitsServlet extends HttpServlet {
         String lastVisitDate = "N/A";
 
         try (Connection con = DbConnector.getConnection()) {
-            int patientId = getPatientIdFromUserId(con, userId);
+            int patientId = userId;
             Set<Integer> reviewedDoctorIds = getReviewedDoctorIds(con, patientId);
 
             String sql = "SELECT * FROM v_appointment_details WHERE user_id = ? AND appointment_status = 'Completed' ORDER BY appointment_date DESC, appointment_time DESC";
@@ -107,18 +107,7 @@ public class PastVisitsServlet extends HttpServlet {
         }
     }
 
-    private int getPatientIdFromUserId(Connection con, int userId) throws SQLException {
-        String sql = "SELECT patient_id FROM Patient WHERE user_id = ?";
-        try (PreparedStatement pst = con.prepareStatement(sql)) {
-            pst.setInt(1, userId);
-            try (ResultSet rs = pst.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt("patient_id");
-                }
-            }
-        }
-        return -1;
-    }
+
 
     private Set<Integer> getReviewedDoctorIds(Connection con, int patientId) throws SQLException {
         Set<Integer> reviewedDoctorIds = new HashSet<>();

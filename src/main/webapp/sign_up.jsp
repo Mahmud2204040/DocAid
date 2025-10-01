@@ -413,7 +413,7 @@
                                 placeholder="Enter your email address"
                                 required
                             />
-                            <div class="form-text">Must be a @gmail.com address</div>
+                            <div class="form-text">Must be a  valid email address</div>
                         </div>
 
                         <!-- Password -->
@@ -755,7 +755,7 @@
     <footer class="footer">
         <div class="container">
             <p>&copy; 2024 DocAid. All rights reserved.</p>
-            <p>Designed by Group H</p>
+            <p>Designed by Mahmudul Hasan</p>
         </div>
     </footer>
 

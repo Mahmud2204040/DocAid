@@ -1,3 +1,4 @@
+// Re-saving to trigger recompilation
 package classes;
 
 import java.sql.Connection;
@@ -58,11 +59,11 @@ public class SearchPageDetails {
             }
 
             StringBuilder sql = new StringBuilder();
-            sql.append("SELECT d.doctor_id, d.user_id, CONCAT(d.first_name, ' ', d.last_name) as display_name, d.first_name, d.last_name, d.gender, d.license_number, d.exp_years as experience, d.bio, d.fee, d.address, d.latitude, d.longitude, d.rating, d.review_count, s.specialty_name as specialty, s.specialty_id, h.hospital_name, h.hospital_id, h.address as hospital_address, u.email, uc.contact_no AS appointment_contact, u.created_at, u.updated_at ");
+            sql.append("SELECT d.doctor_id, u.user_id, CONCAT(d.first_name, ' ', d.last_name) as display_name, d.first_name, d.last_name, d.gender, d.license_number, d.exp_years as experience, d.bio, d.fee, d.address, d.latitude, d.longitude, d.rating, d.review_count, s.specialty_name as specialty, s.specialty_id, h.hospital_name, h.hospital_id, h.address as hospital_address, u.email, uc.contact_no AS appointment_contact ");
             if (userLat != null && userLng != null) {
                 sql.append(", (6371 * acos(cos(radians(?)) * cos(radians(d.latitude)) * cos(radians(d.longitude) - radians(?)) + sin(radians(?)) * sin(radians(d.latitude)))) AS distance");
             }
-            sql.append(" FROM Doctor d JOIN Users u ON d.user_id = u.user_id LEFT JOIN Specialties s ON d.specialty_id = s.specialty_id LEFT JOIN Hospital h ON d.hospital_id = h.hospital_id LEFT JOIN User_Contact uc ON d.user_id = uc.user_id AND uc.contact_type = 'Appointment' ");
+            sql.append(" FROM Doctor d JOIN Users u ON d.doctor_id = u.user_id LEFT JOIN Specialties s ON d.specialty_id = s.specialty_id LEFT JOIN Hospital h ON d.hospital_id = h.hospital_id LEFT JOIN User_Contact uc ON d.doctor_id = uc.user_id AND uc.contact_type = 'Appointment' ");
             sql.append(whereClause);
 
             sql.append(" GROUP BY d.doctor_id ");
@@ -141,8 +142,6 @@ public class SearchPageDetails {
         doctor.setRating(rs.getDouble("rating"));
         doctor.setReviewCount(rs.getInt("review_count"));
         doctor.setPhone(rs.getString("appointment_contact"));
-        doctor.setCreatedAt(rs.getTimestamp("created_at"));
-        doctor.setUpdatedAt(rs.getTimestamp("updated_at"));
         doctor.setEmail(rs.getString("email"));
         if (userLat != null && userLng != null && hasColumn(rs, "distance")) {
             doctor.setDistance(rs.getDouble("distance"));

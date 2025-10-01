@@ -40,8 +40,8 @@ public class DoctorUpdateProfileServlet extends HttpServlet {
                      "MAX(CASE WHEN uc.contact_type = 'Primary' THEN uc.contact_no END) AS primary_contact, " +
                      "MAX(CASE WHEN uc.contact_type = 'Appointment' THEN uc.contact_no END) AS appointment_contact " +
                      "FROM Doctor d " +
-                     "LEFT JOIN User_Contact uc ON d.user_id = uc.user_id " +
-                     "WHERE d.user_id = ? " +
+                     "LEFT JOIN User_Contact uc ON d.doctor_id = uc.user_id " +
+                     "WHERE d.doctor_id = ? " +
                      "GROUP BY d.doctor_id";
 
         try (Connection conn = DbConnector.getConnection();
@@ -106,7 +106,7 @@ public class DoctorUpdateProfileServlet extends HttpServlet {
             conn.setAutoCommit(false); // Start transaction
 
             // 1. Update Doctor table
-            String sqlDoctor = "UPDATE Doctor SET first_name=?, last_name=?, gender=?, bio=?, fee=?, address=? WHERE user_id=?";
+            String sqlDoctor = "UPDATE Doctor SET first_name=?, last_name=?, gender=?, bio=?, fee=?, address=? WHERE doctor_id=?";
             try (PreparedStatement pstmt = conn.prepareStatement(sqlDoctor)) {
                 pstmt.setString(1, firstName);
                 pstmt.setString(2, lastName);

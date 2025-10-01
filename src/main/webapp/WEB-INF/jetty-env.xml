@@ -6,7 +6,7 @@
         <Arg>jdbc/docaid</Arg>
         <Arg>
             <New class="com.mysql.cj.jdbc.MysqlDataSource">
-                <Set name="url">jdbc:mysql://localhost:3306/heath_care_system?useSSL=false&amp;allowPublicKeyRetrieval=true&amp;serverTimezone=UTC</Set>
+                <Set name="url">jdbc:mysql://localhost:3306/health_care_system?useSSL=false&amp;allowPublicKeyRetrieval=true&amp;serverTimezone=UTC</Set>
                 <Set name="user">root</Set>
                 <Set name="password">Mahmud2204040</Set>
             </New>

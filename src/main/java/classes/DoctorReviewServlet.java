@@ -38,19 +38,9 @@ public class DoctorReviewServlet extends HttpServlet {
         Integer userId = (Integer) session.getAttribute("user_id");
         Doctor doctor = new Doctor();
         doctor.setId(userId);
+        doctor.setDoctorId(userId); // In the new schema, doctor_id is the same as user_id.
 
         try (Connection conn = DbConnector.getConnection()) {
-            // First, get the doctor_id from the user_id to ensure we have the correct doctor object
-            String getDoctorIdSql = "SELECT doctor_id FROM Doctor WHERE user_id = ?";
-            try (PreparedStatement pstmt = conn.prepareStatement(getDoctorIdSql)) {
-                pstmt.setInt(1, userId);
-                try (ResultSet rs = pstmt.executeQuery()) {
-                    if (rs.next()) {
-                        doctor.setDoctorId(rs.getInt("doctor_id"));
-                    }
-                }
-            }
-
             // Now, fetch the reviews for this doctor
             List<Doctor.Review> reviewList = doctor.getReviews(conn);
             request.setAttribute("reviewList", reviewList);

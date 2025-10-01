@@ -61,7 +61,21 @@ document.addEventListener('DOMContentLoaded', function () {
                     data.forEach(function (slot) {
                         var listItem = document.createElement('li');
                         listItem.className = 'list-group-item';
-                        listItem.textContent = slot.day + ': ' + slot.startTime + ' - ' + slot.endTime;
+                        var startTimeParts = slot.startTime.split(':');
+                        var endTimeParts = slot.endTime.split(':');
+
+                        var startTime = new Date();
+                        startTime.setHours(startTimeParts[0]);
+                        startTime.setMinutes(startTimeParts[1]);
+
+                        var endTime = new Date();
+                        endTime.setHours(endTimeParts[0]);
+                        endTime.setMinutes(endTimeParts[1]);
+
+                        var formattedStartTime = startTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+                        var formattedEndTime = endTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+
+                        listItem.textContent = slot.day + ': ' + formattedStartTime + ' - ' + formattedEndTime;
                         doctorScheduleList.appendChild(listItem);
                     });
                 } else {

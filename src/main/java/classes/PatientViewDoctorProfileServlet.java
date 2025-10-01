@@ -19,6 +19,7 @@ import java.util.Map;
 import java.util.HashMap;
 import classes.DbConnector;
 import classes.Doctor;
+import classes.DoctorService;
 
 @WebServlet("/patient/doctor-profile")
 public class PatientViewDoctorProfileServlet extends HttpServlet {
@@ -37,7 +38,13 @@ public class PatientViewDoctorProfileServlet extends HttpServlet {
             return;
         }
 
-        int doctorId = Integer.parseInt(doctorIdStr);
+        int doctorId;
+        try {
+            doctorId = Integer.parseInt(doctorIdStr);
+        } catch (NumberFormatException e) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid Doctor ID format.");
+            return;
+        }
 
         try (Connection con = DbConnector.getConnection()) {
             // 1. Fetch Doctor Details from the view
